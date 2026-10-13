@@ -1,0 +1,29 @@
+{
+  "name": "case-study-builder",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Case Study Builder - bien ket qua du an thanh cau chuyen ai cung muon doc (MVP monorepo)",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @csb/api && npm run build -w @csb/web",
+    "test": "npm run test -w @csb/api",
+    "dev:api": "npm run dev -w @csb/api",
+    "dev:web": "npm run dev -w @csb/web",
+    "start:api": "npm run start -w @csb/api",
+    "start:web": "npm run start -w @csb/web"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "allowScripts": {
+    "better-sqlite3@11.10.0": true,
+    "esbuild@0.28.2": true,
+    "esbuild@0.21.5": true
+  },
+  "dependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.64.5",
+    "next": "^14.2.5"
+  }
+}

@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.next/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+data/
+.env
+.env.preview
+.DS_Store
+coverage/
+
+# Preview build state (local only)
+.vibeflow-preview.hash
