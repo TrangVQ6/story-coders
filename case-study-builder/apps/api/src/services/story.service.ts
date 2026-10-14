@@ -56,7 +56,7 @@ export class StoryService {
       outputs = await this.llm.generate(prompt, SYSTEM_PROMPT);
       mode = 'llm';
     } else {
-      outputs = generateDemo(type, redacted, req.languages);
+      outputs = await generateDemo(type, redacted, req.languages);
       mode = 'demo';
     }
 

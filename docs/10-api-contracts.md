@@ -262,3 +262,35 @@ flowchart TD
 | `error_code` | string \| null | `ERR_TIMEOUT` |
 
 **Ràng buộc**: Không bao giờ ghi `answers` hoặc nội dung đầu ra vào log (ADR-004, NFR-SEC-001).
+
+---
+
+## 6. Contract Google Cloud Translation (bản dịch thật — demo mode)
+
+> Khi chưa cấu hình LLM API key (demo mode), `ja_version`/`en_version` được dịch thật qua **Google Cloud Translation API v2** nếu có `GOOGLE_TRANSLATE_API_KEY`. Không có key → fallback về chuỗi placeholder demo.
+
+### 6.1. Cấu hình
+
+| Env var | Bắt buộc | Mô tả |
+|---|---|---|
+| `GOOGLE_TRANSLATE_API_KEY` | Không | API key Google Cloud (bật Translation API). Đặt trong `.env.preview` hoặc env của container API. |
+
+### 6.2. Request
+
+```
+POST https://translation.googleapis.com/language/translate/v2?key=API_KEY
+Content-Type: application/json
+
+{ "q": "<newsletter_vi>", "target": "ja | en", "format": "text" }
+```
+
+### 6.3. Response (thành công)
+
+```json
+{ "data": { "translations": [ { "translatedText": "..." } ] } }
+```
+
+### 6.4. Xử lý lỗi
+
+- Không có key / lỗi mạng / HTTP ≠ 200 → trả về `null` → giữ placeholder demo (không làm hỏng luồng tạo story).
+- Timeout: 15s mỗi request; dịch song song `ja` + `en` bằng `Promise.all`.

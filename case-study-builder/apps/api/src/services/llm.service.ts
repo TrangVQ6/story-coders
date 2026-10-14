@@ -100,15 +100,55 @@ export function normalizeOutputs(o: Partial<GeneratedOutputs>): GeneratedOutputs
 }
 
 /**
+ * Google Cloud Translation API v2 — bản dịch thật cho tính năng Translations.
+ * Dung khi cau hinh GOOGLE_TRANSLATE_API_KEY. Tra ve null neu khong co key
+ * hoac loi (graceful fallback ve placeholder demo).
+ */
+export async function translateViaGoogle(
+  text: string,
+  target: 'ja' | 'en'
+): Promise<string | null> {
+  const key = config.googleTranslate.apiKey;
+  if (!key || !text.trim()) return null;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const url = `https://translation.googleapis.com/language/translate/v2?key=${encodeURIComponent(key)}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q: text, target, format: 'text' }),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      console.warn(`[translate] Google API error: ${res.status}`);
+      return null;
+    }
+    const data = (await res.json()) as {
+      data?: { translations?: Array<{ translatedText?: string }> };
+    };
+    const translated = data.data?.translations?.[0]?.translatedText;
+    return translated && translated.trim() ? translated : null;
+  } catch (err) {
+    console.warn('[translate] failed:', err instanceof Error ? err.message : err);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
  * Demo generator — deterministic fallback khi chua cau hinh LLM API key.
  * Viet lai v2.0: ho tro 2 chu de (personal/team), phong cach FUN (docs/12 §5).
  * Bao dam moi dau ra chi dung du lieu da redact; khong bia so lieu.
+ * Neu co GOOGLE_TRANSLATE_API_KEY, ja_version/en_version la ban dich that.
  */
-export function generateDemo(
+export async function generateDemo(
   achievementType: AchievementType,
   answers: Answers,
   languages: LangCode[]
-): GeneratedOutputs {
+): Promise<GeneratedOutputs> {
   const resultKey = resultKeyFor(achievementType);
   const result = answers[resultKey]?.trim();
 
@@ -124,16 +164,25 @@ export function generateDemo(
       ? demoPersonalCaseStudy(answers)
       : demoTeamCaseStudy(answers);
 
+  const [ja, en] = await Promise.all([
+    languages.includes('ja') ? translateViaGoogle(newsletter_vi, 'ja') : Promise.resolve(null),
+    languages.includes('en') ? translateViaGoogle(newsletter_vi, 'en') : Promise.resolve(null),
+  ]);
+
   return {
     newsletter_vi,
     teams_post,
     case_study,
-    ja_version: languages.includes('ja')
-      ? '[Bản dịch tiếng Nhật — chế độ demo: kết nối AI để nhận bản dịch thật]'
-      : null,
-    en_version: languages.includes('en')
-      ? '[English translation — demo mode: connect AI for real translation]'
-      : null,
+    ja_version:
+      ja ??
+      (languages.includes('ja')
+        ? '[Bản dịch tiếng Nhật — chế độ demo: kết nối AI để nhận bản dịch thật]'
+        : null),
+    en_version:
+      en ??
+      (languages.includes('en')
+        ? '[English translation — demo mode: connect AI for real translation]'
+        : null),
   };
 }
 

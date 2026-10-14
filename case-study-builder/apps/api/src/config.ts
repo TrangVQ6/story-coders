@@ -14,4 +14,7 @@ export const config = {
     maxTokens: 4600,
     timeoutMs: 45000,
   },
+  googleTranslate: {
+    apiKey: process.env.GOOGLE_TRANSLATE_API_KEY || '',
+  },
 };
