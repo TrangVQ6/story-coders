@@ -10,6 +10,8 @@ services:
   web:
     image: node:20-bookworm
     working_dir: /app/apps/web
+    environment:
+      API_PROXY_TARGET: http://api:4000
     volumes:
       - ./case-study-builder:/app
     depends_on:
