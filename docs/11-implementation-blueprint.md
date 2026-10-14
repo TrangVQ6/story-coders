@@ -2475,6 +2475,39 @@ services:
 | NFR-PERF-001 <= 45s | ✅ | Demo mode ~1ms; LLM mode timeout 45s |
 | NFR-QUAL-001 Chat luong noi dung | ✅ | Prompt v1.0 + ContentGuard + OutputScanner |
 
+## 6.1. Thay doi v2.0 (2026-10-14) — BACKEND DA IMPLEMENT, frontend con lai
+
+> Nhung thay doi nay duoc mo ta day du tai **docs/12-content-standard-question-banks-and-style.md**,
+> **ADR-005** va **ADR-006**. Trang thai: **backend da xong (30 test PASSED)**, frontend chua cap nhat.
+
+| Thay doi | Yeu cau | File/an thanh phan can sua | Trang thai |
+|---|---|---|---|
+| Cau hoi 2 chu de x 10 | FR-FORM-001, BR-009 | `apps/web/src/components/QuestionForm.tsx` (them TopicSelector + render dong 10 cau), `apps/web/src/lib/types.ts` (Answers), `apps/web/src/lib/samples.ts` (2 mau moi), `apps/api/src/types.ts` | Backend ✅ / Web ⬜ |
+| Checkbox consent | FR-FORM-005, BR-010 | `QuestionForm.tsx` (ConsentGate), `apps/web/src/lib/api.ts` (payload consent), `apps/api/src/routes/stories.routes.ts` (validate consent) | Backend ✅ / Web ⬜ |
+| Danh dau ten rieng + chu cai dau | FR-GEN-003, BR-011 | `apps/api/src/security/entityDetector.ts` (category proper_name), `apps/api/src/security/redactor.ts` (initials), `apps/api/src/security/outputScanner.ts`, `ResultTabs.tsx` (ProperNameHighlighter) | Backend ✅ / Web ⬜ |
+| Giong van FUN | FR-GEN-006, BR-012 | `apps/api/src/prompts/systemPrompt.ts` (system prompt v2.0), `apps/api/src/prompts/userPrompt.ts` (achievement_type + consent) | Backend ✅ |
+| Bo cau hoi chuan | docs/12 §2 | `apps/web/src/lib/samples.ts`, `apps/web/src/lib/types.ts` (QuestionBank constant) | Backend ✅ / Web ⬜ |
+
+**Backend da implement (30/30 test PASSED)**:
+- `apps/api/src/types.ts` — `AchievementType`, `Answers` (2 chu de x 10), `Consent`, `proper_name`, `consent_missing`
+- `apps/api/src/services/story.service.ts` — validate `achievement_type` + `consent` + required keys theo chu de
+- `apps/api/src/prompts/systemPrompt.ts` — system prompt v2.0 (phong cach FUN)
+- `apps/api/src/prompts/userPrompt.ts` — achievement_type + consent + 10 cau theo chu de
+- `apps/api/src/security/entityDetector.ts` — rule R8 `proper_name` (ma don vi FPT + ten nguoi kem chuc danh)
+- `apps/api/src/security/redactor.ts` — `toInitials()` (chu cai dau), proper_name giu nguyen de UI highlight
+- `apps/api/src/security/outputScanner.ts` — warning `proper_name` (medium)
+- `apps/api/src/services/warning.service.ts` — `buildConsentMissing()`
+- `apps/api/src/services/llm.service.ts` — `generateDemo()` viet lai cho 2 chu de, giong FUN
+- `apps/api/src/db/database.ts` — cot `achievement_type` + bang `consents` (kem migration)
+- `apps/api/src/repository/sessionRepository.ts` — luu/doc achievement_type + consent
+- `apps/api/src/config.ts` — `promptVersion: '2.0'`, maxTokens 4600
+
+**Luu y khi implement frontend**:
+- `Answers` type doi tu 6 truong cu sang 10 truong theo chu de (`pa_*` hoac `team_*`) + `achievement_type`.
+- Payload API them `consent` object; backend bat buoc `consent_media_public && consent_truthful === true` (422 neu thieu).
+- System prompt da nang len v2.0; `PROMPT_VERSION = "2.0"`.
+- Unit/E2E test backend da cap nhat (30 test); E2E Playwright (16 test cu) can cap nhat theo bo cau hoi moi.
+
 ## 7. Ghi chu bao mat
 
 - API key LLM chi nam o **backend** (env), frontend khong bao gio thay key (khac voi thiet ke client-side o docs/07 — huong tot hon).

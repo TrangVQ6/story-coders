@@ -3,9 +3,10 @@
 | Thuộc tính | Giá trị |
 |---|---|
 | **Tài liệu** | Business Requirements Document (BRD) |
-| **Phiên bản** | 1.0 |
+| **Phiên bản** | 2.0 |
 | **Trạng thái** | Draft — chờ phê duyệt |
-| **Ngày** | 2026-10-13 |
+| **Ngày** | 2026-10-14 |
+| **Thay đổi v2.0** | Cấu trúc câu hỏi 2 chủ đề × 10 câu; checkbox xác nhận bảo mật; đánh dấu tên riêng; giọng văn theo bản tin FUN (xem docs/12) |
 | **Tác giả** | Business Analyst |
 | **Chủ sở hữu sản phẩm** | Trang Vuong Quynh |
 | **Phạm vi** | MVP (Phase 1) + định hướng Phase 2 |
@@ -14,11 +15,12 @@
 
 ## 1. Tóm tắt điều hành (Executive Summary)
 
-**Case Study Builder** là một ứng dụng web tự động hóa quy trình "kể lại thành tựu dự án" trong tổ chức phần mềm. Người dùng chỉ cần trả lời **6 câu hỏi có cấu trúc**, hệ thống sẽ:
+**Case Study Builder** là một ứng dụng web tự động hóa quy trình "kể lại thành tựu dự án" trong tổ chức phần mềm. Người dùng chọn chủ đề (**thành tựu cá nhân** hoặc **thành tựu đội nhóm**) và trả lời **10 câu hỏi phân tích** theo chủ đề, hệ thống sẽ:
 
-1. **Ẩn thông tin nhạy cảm** (tên khách hàng, tên dự án, số liệu mật) theo nguyên tắc tự động + cảnh báo;
-2. **Tạo 5 đầu ra** phục vụ các kênh khác nhau: bản tin nội bộ, post Teams, case study chuẩn khung, bản dịch JA/EN, danh sách cảnh báo rà soát;
-3. Cho phép **chỉnh sửa và copy** trước khi phát hành.
+1. **Ẩn thông tin nhạy cảm** (tên khách hàng, tên dự án, số liệu mật) theo nguyên tắc tự động + cảnh báo; **tên riêng được đánh dấu nổi bật** để người chỉnh sửa rà soát hoặc **chỉ viết chữ cái đầu** để giữ bảo mật;
+2. **Xác nhận bảo mật trước khi tạo**: checkbox quyền công khai hình ảnh + khẳng định thông tin đúng sự thật có sự đồng ý của khách hàng/người được nhắc tới;
+3. **Tạo 5 đầu ra** phục vụ các kênh khác nhau: bản tin nội bộ, post Teams, case study chuẩn khung, bản dịch JA/EN, danh sách cảnh báo rà soát — theo **giọng văn bản tin FUN** (FPT Japan);
+4. Cho phép **chỉnh sửa và copy** trước khi phát hành.
 
 Giá trị cốt lõi: **giảm thời gian viết từ nhiều giờ xuống còn dưới 10 phút**, đồng thời **đảm bảo an toàn thông tin** và **chuẩn hóa chất lượng nội dung** trên mọi kênh truyền thông nội bộ.
 
@@ -58,7 +60,7 @@ Các team dự án tạo ra nhiều thành tựu đáng ghi nhận (cải thiệ
 
 | Persona | Vai trò | Nhu cầu chính | Nỗi đau hiện tại | Kênh sử dụng |
 |---|---|---|---|---|
-| **PA — Project Member/Lead** | Người cung cấp thông tin gốc | Chia sẻ thành tựu nhanh, không phải tự viết | Deadline, không biết viết, ngại lộ thông tin | Form 6 câu hỏi |
+| **PA — Project Member/Lead** | Người cung cấp thông tin gốc | Chia sẻ thành tựu nhanh, không phải tự viết | Deadline, không biết viết, ngại lộ thông tin | Form chọn chủ đề + 10 câu hỏi |
 | **PB — Truyền thông nội bộ** | Người biên tập/phát hành | Có bản nháp chuẩn, đúng thông tin kỹ thuật | Phỏng vấn nhiều vòng, chờ duyệt lâu | Tab kết quả, chỉnh sửa, copy |
 | **PC — Marketing/Sales** | Người tận dụng nội dung | Case study đa ngôn ngữ, đã ẩn thông tin khách | Thiếu nguồn nội dung, lo ngại bảo mật | Bản dịch JA/EN, cảnh báo |
 | **PD — Lead/Quản lý** | Người phê duyệt | Kiểm soát thông tin trước khi phát hành | Không có cơ chế rà soát tập trung | Danh sách cảnh báo, checkpoint duyệt |
@@ -96,37 +98,48 @@ Các team dự án tạo ra nhiều thành tựu đáng ghi nhận (cải thiệ
 ### 4.2. Luồng sử dụng cốt lõi (Core Journey)
 
 ```
-Trả lời 6 câu hỏi → Hệ thống ẩn thông tin nhạy cảm → Tạo 5 đầu ra → Chỉnh sửa & Copy
+Chọn chủ đề (cá nhân/đội nhóm) → Trả lời 10 câu hỏi theo chủ đề → Tick xác nhận bảo mật → Hệ thống ẩn thông tin nhạy cảm + đánh dấu tên riêng → Tạo 5 đầu ra (giọng FUN) → Chỉnh sửa & Copy
 ```
 
-### 4.3. 6 câu hỏi đầu vào (đã chuẩn hóa)
+### 4.3. Cấu trúc câu hỏi mới (2 chủ đề × 10 câu)
 
-| # | Câu hỏi | Trường dữ liệu | Bắt buộc | Ghi chú |
-|---|---|---|---|---|
-| Q1 | Dự án làm gì? *(lĩnh vực, không ghi tên khách)* | `project_description` | ✅ | Nhắc người dùng KHÔNG nhập tên khách |
-| Q2 | Thách thức lớn nhất là gì? | `challenge` | ✅ | |
-| Q3 | Team đã giải quyết bằng cách nào? | `solution` | ✅ | |
-| Q4 | Kết quả có con số nào không? | `result_metrics` | ⬜ | Nếu trống → sinh cảnh báo "Nên bổ sung con số cụ thể" |
-| Q5 | Bài học hoặc mẹo muốn chia sẻ? | `lesson` | ⬜ | |
-| Q6 | Ai là người hùng thầm lặng của team? | `unsung_hero` | ⬜ | Tùy chọn ẩn danh |
+**Bước 0 — Chọn chủ đề** (`achievement_type`):
+
+| Option | Nhãn | Mô tả ngắn |
+|---|---|---|
+| A | **Thành tựu cá nhân** | Câu chuyện của một người: giải thưởng, OKR cá nhân, sáng kiến riêng |
+| B | **Thành tựu đội nhóm** | Câu chuyện của team/dự án: thắng dự án, go-live, kỷ lục tuyển dụng |
+
+**Bước 1 — 10 câu hỏi theo chủ đề** (chi tiết tại docs/12 §2.2–2.3):
+
+| Chủ đề | Các câu hỏi (question_key) |
+|---|---|
+| A — Cá nhân | `pa_context`, `pa_role`, `pa_challenge`, `pa_action`, `pa_result`, `pa_support`, `pa_lesson`, `pa_impact`, `pa_evidence`, `pa_quote` |
+| B — Đội nhóm | `team_context`, `team_project`, `team_challenge`, `team_solution`, `team_result`, `team_members`, `team_collab`, `team_lesson`, `team_impact`, `team_quote` |
+
+> Quy tắc: câu hỏi đầu tiên luôn là chọn chủ đề; sau khi chọn, form chỉ hiển thị 10 câu của chủ đề đó. Đổi chủ đề → xóa câu trả lời cũ (có cảnh báo). Xem ADR-005.
 
 ### 4.4. 5 đầu ra (Deliverables)
 
 | # | Đầu ra | Độ dài mục tiêu | Giọng văn | Ngôn ngữ |
 |---|---|---|---|---|
-| O1 | **Bản tin nội bộ** | ~300 từ | Kể chuyện, truyền cảm hứng | VI |
-| O2 | **Post Teams** | ≤ 280 ký tự + hashtag | Ngắn gọn, lôi cuốn | VI |
-| O3 | **Case study chuẩn khung** | Bối cảnh → Thách thức → Giải pháp → Kết quả | Chuyên nghiệp, có cấu trúc | VI |
-| O4 | **Bản dịch JA + EN** | Tương ứng O1/O3 | Đúng thuật ngữ kỹ thuật | JA, EN |
+| O1 | **Bản tin nội bộ** | ~300 từ | **Bản tin FUN** — mở bài theo sự kiện, người thật việc thật, con số, trích dẫn, kết ý nghĩa | VI |
+| O2 | **Post Teams** | ≤ 280 ký tự + hashtag | Rút gọn phong cách FUN: sự kiện + kết quả + quote ngắn | VI |
+| O3 | **Case study chuẩn khung** | Bối cảnh → Thách thức → Giải pháp → Kết quả | Chuyên nghiệp, kể chuyện giải pháp theo FUN | VI |
+| O4 | **Bản dịch JA + EN** | Tương ứng O1/O3 | Đúng thuật ngữ kỹ thuật, trang trọng | JA, EN |
 | O5 | **Danh sách cảnh báo** | Liệt kê điểm rủi ro | Khách quan, hành động được | VI |
+
+> Chi tiết 8 đặc điểm giọng văn FUN (S1–S8) và cách áp dụng: docs/12 §5.
 
 ### 4.5. Nguyên tắc thiết kế sản phẩm
 
 1. **An toàn trước tiên (Privacy-by-default):** mọi đầu ra đều được rà soát ẩn thông tin; cảnh báo luôn được tạo kể cả khi không phát hiện rủi ro (trạng thái "đã rà soát").
 2. **Không bịa số liệu (No-hallucination):** hệ thống chỉ dùng thông tin người dùng cung cấp; thiếu số liệu → cảnh báo, không tự suy diễn.
-3. **Con người quyết định cuối cùng (Human-in-the-loop):** mọi đầu ra là *bản nháp*; người dùng và lead phải rà soát trước khi phát hành.
+3. **Con người quyết định cuối cùng (Human-in-the-loop):** mọi đầu ra là *bản nháp*; người dùng và lead phải rà soát trước khi phát hành. **Tên riêng được đánh dấu nổi bật** để người chỉnh sửa dễ rà soát, hoặc **chỉ viết chữ cái đầu** để bảo mật.
 4. **Tái sử dụng tối đa (Reusability):** dữ liệu đầu vào được lưu dưới dạng có cấu trúc để tái sinh nội dung cho nhiều kênh mà không cần nhập lại.
 5. **Không lưu trữ bí mật:** hệ thống không lưu tên khách hàng thật; nếu người dùng nhập, hệ thống đánh dấu là thông tin cần ẩn và không dùng trong đầu ra.
+6. **Consent bắt buộc (Consent-first):** người dùng phải xác nhận quyền công khai hình ảnh và tính xác thực của thông tin (có sự đồng ý của khách hàng/người được nhắc tới) trước khi tạo nội dung.
+7. **Giọng văn chuẩn (House style):** mọi đầu ra viết theo phong cách bản tin FUN — FPT Japan (docs/12 §5).
 
 ---
 
@@ -134,9 +147,10 @@ Trả lời 6 câu hỏi → Hệ thống ẩn thông tin nhạy cảm → Tạo
 
 ### 5.1. Trong phạm vi — MVP (Phase 1)
 
-- Form 6 câu hỏi có cấu trúc + chọn ngôn ngữ (VI/JA/EN).
-- Engine sinh 5 đầu ra (bản tin, post Teams, case study, bản dịch, cảnh báo).
-- Cơ chế ẩn thông tin nhạy cảm tự động + danh sách cảnh báo.
+- Form chọn chủ đề (cá nhân/đội nhóm) + 10 câu hỏi phân tích theo chủ đề + chọn ngôn ngữ (VI/JA/EN).
+- 2 checkbox xác nhận bảo mật bắt buộc (quyền công khai hình ảnh + tính xác thực/đồng ý).
+- Engine sinh 5 đầu ra (bản tin, post Teams, case study, bản dịch, cảnh báo) theo giọng văn FUN.
+- Cơ chế ẩn thông tin nhạy cảm tự động + **đánh dấu nổi bật tên riêng** + gợi ý viết chữ cái đầu + danh sách cảnh báo.
 - 2 dự án mẫu (demo).
 - Chỉnh sửa trực tiếp trên từng tab + nút Copy.
 - Giao diện responsive, tông hồng–tím, thân thiện.
@@ -162,7 +176,7 @@ Trả lời 6 câu hỏi → Hệ thống ẩn thông tin nhạy cảm → Tạo
 
 | ID | Yêu cầu kinh doanh | Mô tả | MoSCoW |
 |---|---|---|---|
-| BR-001 | Tạo nội dung nhanh | Người dùng tạo được bộ 5 đầu ra từ 6 câu trả lời trong **≤ 10 phút** (bao gồm thời gian nhập liệu) | Must |
+| BR-001 | Tạo nội dung nhanh | Người dùng tạo được bộ 5 đầu ra từ 10 câu trả lời trong **≤ 10 phút** (bao gồm thời gian nhập liệu) | Must |
 | BR-002 | Ẩn thông tin nhạy cảm | Hệ thống phát hiện và thay thế tên khách hàng, tên dự án, số liệu mật bằng mô tả chung; mọi phát hiện phải xuất hiện trong danh sách cảnh báo | Must |
 | BR-003 | Không bịa thông tin | Mọi đầu ra chỉ dùng dữ liệu người dùng cung cấp; không thêm số liệu, tên, hoặc kết quả không có trong đầu vào | Must |
 | BR-004 | Đa ngôn ngữ | Hệ thống tạo bản dịch tiếng Nhật và tiếng Anh giữ nguyên nội dung kỹ thuật | Must |
@@ -170,6 +184,10 @@ Trả lời 6 câu hỏi → Hệ thống ẩn thông tin nhạy cảm → Tạo
 | BR-006 | Kiểm soát phát hành | Mọi đầu ra là bản nháp; người dùng phải xác nhận đã đọc cảnh báo trước khi copy | Should |
 | BR-007 | Tái sử dụng dữ liệu | Dữ liệu đầu vào được lưu để tái sinh nội dung cho các kênh khác mà không nhập lại | Should |
 | BR-008 | Đo lường hiệu quả | Hệ thống ghi log phiên tạo nội dung (số lần tạo, thời gian, ngôn ngữ) phục vụ phân tích | Could |
+| BR-009 | Câu hỏi theo chủ đề | Câu hỏi đầu tiên chọn chủ đề (cá nhân/đội nhóm); hệ thống hiển thị đúng 10 câu hỏi phân tích theo chủ đề đã chọn | Must |
+| BR-010 | Xác nhận bảo mật | Người dùng phải tick 2 checkbox (quyền công khai hình ảnh + tính xác thực/đồng ý của khách hàng/người được nhắc tới) trước khi tạo nội dung | Must |
+| BR-011 | Đánh dấu tên riêng | Tên riêng có khả năng là dự án/khách hàng/người được đánh dấu nổi bật để rà soát; hỗ trợ chuyển thành chữ cái đầu | Must |
+| BR-012 | Giọng văn chuẩn | Mọi đầu ra viết theo phong cách bản tin FUN — FPT Japan (docs/12 §5) | Must |
 
 ---
 
@@ -193,9 +211,11 @@ Trả lời 6 câu hỏi → Hệ thống ẩn thông tin nhạy cảm → Tạo
 | R1 | AI bịa số liệu/kết quả | Cao | Prompt ràng buộc "chỉ dùng thông tin người dùng"; engine cảnh báo khi thiếu số liệu; nguyên tắc Human-in-the-loop |
 | R2 | Lộ thông tin khách hàng qua mô tả kỹ thuật | Cao | Tầng ẩn thông tin (masking) + danh sách cảnh báo + checkpoint xác nhận trước khi copy |
 | R3 | Chất lượng bản dịch JA không đạt | Trung bình | Prompt chuyên biệt song ngữ Việt–Nhật; cho phép chỉnh sửa thủ công; Phase 2: thêm bước kiểm tra dịch |
-| R4 | Người dùng không có động lực nhập liệu | Trung bình | Form 6 câu hỏi tối giản; dự án mẫu; gamification nhẹ (ghi nhận người hùng) |
+| R4 | Người dùng không có động lực nhập liệu | Trung bình | Form chọn chủ đề + 10 câu hỏi tối giản; dự án mẫu; gamification nhẹ (ghi nhận người hùng) |
 | R5 | Nội dung đồng nhất, thiếu cá tính | Thấp | Giữ giọng kể chuyện; cho phép chỉnh sửa tự do trước khi copy |
 | R6 | Tuân thủ quy định dữ liệu cá nhân | Trung bình | Áp dụng PDPA (VN – Nghị định 13/2023/NĐ-CP), APPI (JP), GDPR (EU nếu mở rộng); xem §9 |
+| R7 | Phát hành nội dung về người khác khi chưa có đồng ý | Cao | Checkbox consent bắt buộc (BR-010); cảnh báo `consent_missing`; chính sách truyền thông nội bộ |
+| R8 | Dùng hình ảnh không rõ quyền sử dụng | Cao | Checkbox quyền công khai hình ảnh (BR-010); Phase 2: upload + watermark |
 
 ---
 
@@ -207,6 +227,7 @@ Trả lời 6 câu hỏi → Hệ thống ẩn thông tin nhạy cảm → Tạo
 | **APPI** (Nhật Bản) | Dữ liệu người dùng JP | Xử lý dữ liệu cá nhân minh bạch; không chuyển dữ liệu ra ngoài nếu chưa đồng ý |
 | **GDPR** (EU — nếu mở rộng) | Người dùng EU | Consent rõ ràng; quyền truy cập/xóa; ghi chú xử lý dữ liệu |
 | **Bí mật kinh doanh / NDA** | Toàn bộ | Không lưu trữ thông tin mật của khách hàng ngoài phiên làm việc; cơ chế ẩn mặc định |
+| **Quyền hình ảnh & sự đồng ý** | Toàn bộ | Consent bắt buộc trước khi tạo nội dung: quyền công khai hình ảnh + sự đồng ý của khách hàng/người được nhắc tới (BR-010, ADR-006) |
 | **WCAG 2.1 AA** | Giao diện web | Khả năng tiếp cận: tương phản màu, điều hướng bàn phím, nhãn form đầy đủ |
 
 ---
@@ -228,7 +249,7 @@ Trả lời 6 câu hỏi → Hệ thống ẩn thông tin nhạy cảm → Tạo
 
 | Phase | Nội dung | Tiêu chí ra mắt |
 |---|---|---|
-| **Phase 1 — MVP** | Form 6 câu hỏi, 5 đầu ra, ẩn thông tin, cảnh báo, 2 mẫu, copy | Chạy pilot 3 team trong 4 tuần; ≥ 90% người dùng tạo được nội dung trong 10 phút |
+| **Phase 1 — MVP** | Form chọn chủ đề + 10 câu hỏi, consent, 5 đầu ra giọng FUN, ẩn thông tin + đánh dấu tên riêng, cảnh báo, 2 mẫu, copy | Chạy pilot 3 team trong 4 tuần; ≥ 90% người dùng tạo được nội dung trong 10 phút |
 | **Phase 2 — Quản trị** | Approval workflow, kho lưu trữ, xuất DOCX/PDF, analytics | ≥ 20 case study/quý; quy trình duyệt có vết |
 | **Phase 3 — Mở rộng** | Tích hợp CMS/Teams, SSO, đa ngôn ngữ CN/KR, AI review nâng cao | Tự động hóa phát hành theo quy trình duyệt |
 
@@ -256,6 +277,8 @@ Trả lời 6 câu hỏi → Hệ thống ẩn thông tin nhạy cảm → Tạo
 |---|---|---|
 | OQ1 | Ai là người phê duyệt cuối cùng trước khi phát hành? (lead dự án hay truyền thông?) | Thiết kế quy trình duyệt Phase 2 |
 | OQ2 | Có cần lưu trữ lịch sử các phiên tạo nội dung để tái sử dụng không? | Thiết kế data retention |
-| OQ3 | Tên "người hùng thầm lặng" có được công khai hay ẩn danh mặc định? | Thiết kế trường Q6 |
+| OQ3 | Tên "người hùng thầm lặng" có được công khai hay ẩn danh mặc định? | Thiết kế trường pa_support/team_members |
 | OQ4 | Ngân sách token AI mỗi tháng cho phép bao nhiêu phiên tạo? | Giới hạn NFR hiệu năng |
 | OQ5 | Có cần tích hợp với hệ thống quản lý dự án hiện có (Jira…) không? | Phạm vi Phase 2 |
+| OQ6 | Có cần upload hình ảnh thật trong MVP không, hay chỉ mô tả/đường dẫn? | Phạm vi FR-FORM-005 |
+| OQ7 | Chuẩn viết tắt chữ cái đầu (tên đầy đủ, họ+tên viết tắt)? | Cấu hình L2/L3 |

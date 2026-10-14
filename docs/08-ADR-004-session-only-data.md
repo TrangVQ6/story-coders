@@ -4,7 +4,7 @@
 Accepted
 
 ## Context
-SRS NFR-SEC-001 yêu cầu: dữ liệu đầu vào (6 câu trả lời) không được lưu trữ lâu dài ngoài phiên làm việc; nếu lưu để tái sử dụng (Phase 2) phải có cơ chế xóa theo yêu cầu (PDPA — Nghị định 13/2023/NĐ-CP). BRD §5.2 đưa "kho lưu trữ case study" vào Phase 2.
+SRS NFR-SEC-001 yêu cầu: dữ liệu đầu vào (10 câu trả lời) không được lưu trữ lâu dài ngoài phiên làm việc; nếu lưu để tái sử dụng (Phase 2) phải có cơ chế xóa theo yêu cầu (PDPA — Nghị định 13/2023/NĐ-CP). BRD §5.2 đưa "kho lưu trữ case study" vào Phase 2.
 
 Câu hỏi: MVP có nên lưu dữ liệu phiên (localStorage/backend) để tái sử dụng không?
 

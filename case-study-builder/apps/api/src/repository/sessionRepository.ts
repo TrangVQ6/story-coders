@@ -1,13 +1,22 @@
 import { Db } from '../db/database';
-import { Answers, GeneratedOutputs, Warning, SessionRecord } from '../types';
+import {
+  Answers,
+  GeneratedOutputs,
+  Warning,
+  SessionRecord,
+  Consent,
+  AchievementType,
+} from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 export class SessionRepository {
   constructor(private db: Db) {}
 
   create(input: {
+    achievementType: AchievementType;
     answers: Answers;
     languages: string[];
+    consent: Consent;
     maskedEntities: number;
     outputs: GeneratedOutputs;
     warnings: Warning[];
@@ -17,9 +26,16 @@ export class SessionRepository {
     this.db.transaction(() => {
       this.db
         .prepare(
-          'INSERT INTO sessions (id, status, created_at, languages, masked_entities) VALUES (?, ?, ?, ?, ?)'
+          'INSERT INTO sessions (id, status, created_at, languages, achievement_type, masked_entities) VALUES (?, ?, ?, ?, ?, ?)'
         )
-        .run(id, 'ready', now, JSON.stringify(input.languages), input.maskedEntities);
+        .run(
+          id,
+          'ready',
+          now,
+          JSON.stringify(input.languages),
+          input.achievementType,
+          input.maskedEntities
+        );
 
       const insAns = this.db.prepare(
         'INSERT INTO answers (session_id, question_key, content) VALUES (?, ?, ?)'
@@ -42,13 +58,33 @@ export class SessionRepository {
         'INSERT INTO warnings (session_id, severity, category, description) VALUES (?, ?, ?, ?)'
       );
       for (const w of input.warnings) insWarn.run(id, w.severity, w.category, w.description);
+
+      const insConsent = this.db.prepare(
+        'INSERT INTO consents (session_id, consent_media_public, consent_truthful) VALUES (?, ?, ?)'
+      );
+      insConsent.run(
+        id,
+        input.consent.consent_media_public ? 1 : 0,
+        input.consent.consent_truthful ? 1 : 0
+      );
     })();
     return id;
   }
 
   getById(id: string): SessionRecord | null {
-    const row = this.db.prepare('SELECT * FROM sessions WHERE id = ?').get(id) as
-      | { id: string; status: string; created_at: string; languages: string; masked_entities: number }
+    const row = this.db
+      .prepare(
+        'SELECT id, status, created_at, languages, achievement_type, masked_entities FROM sessions WHERE id = ?'
+      )
+      .get(id) as
+      | {
+          id: string;
+          status: string;
+          created_at: string;
+          languages: string;
+          achievement_type: AchievementType;
+          masked_entities: number;
+        }
       | undefined;
     if (!row) return null;
 
@@ -61,6 +97,11 @@ export class SessionRepository {
     const warningsRows = this.db
       .prepare('SELECT severity, category, description FROM warnings WHERE session_id = ?')
       .all(id) as Warning[];
+    const consentRow = this.db
+      .prepare(
+        'SELECT consent_media_public, consent_truthful FROM consents WHERE session_id = ? ORDER BY id DESC LIMIT 1'
+      )
+      .get(id) as { consent_media_public: number; consent_truthful: number } | undefined;
 
     const answers = {} as Record<string, string>;
     for (const r of answersRows) answers[r.question_key] = r.content;
@@ -75,7 +116,12 @@ export class SessionRepository {
       status: row.status,
       created_at: row.created_at,
       languages: row.languages,
+      achievement_type: row.achievement_type,
       masked_entities: row.masked_entities,
+      consent: {
+        consent_media_public: Boolean(consentRow?.consent_media_public),
+        consent_truthful: Boolean(consentRow?.consent_truthful),
+      },
       answers: answers as unknown as Answers,
       outputs: outputs as unknown as GeneratedOutputs,
       warnings: warningsRows,

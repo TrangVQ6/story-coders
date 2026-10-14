@@ -3,9 +3,9 @@
 | Thuộc tính | Giá trị |
 |---|---|
 | **Tài liệu** | API Contracts & Data Flow |
-| **Phiên bản** | 1.0 |
+| **Phiên bản** | 2.0 |
 | **Trạng thái** | Draft |
-| **Liên kết** | SRS v1.0, System Design v1.0, ADR-003 |
+| **Liên kết** | SRS v2.0, System Design v2.0, ADR-003, ADR-005, ADR-006 |
 | **Phạm vi** | MVP (Phase 1) — hợp đồng nội bộ giữa các lớp + hợp đồng LLM gateway |
 
 ---
@@ -28,34 +28,51 @@
 
 ```json
 {
-  "contract_version": "1.0",
+  "contract_version": "2.0",
+  "achievement_type": "personal | team",
   "answers": {
-    "project_description": "string ≤ 500 ký tự, bắt buộc",
-    "challenge": "string ≤ 500 ký tự, bắt buộc",
-    "solution": "string ≤ 500 ký tự, bắt buộc",
-    "result_metrics": "string ≤ 500 ký tự | null",
-    "lesson": "string ≤ 500 ký tự | null",
-    "unsung_hero": "string ≤ 500 ký tự | null"
+    "pa_context": "string ≤ 500 ký tự, bắt buộc (nếu personal)",
+    "pa_role": "string ≤ 500 ký tự, bắt buộc (nếu personal)",
+    "pa_challenge": "string ≤ 500 ký tự, bắt buộc (nếu personal)",
+    "pa_action": "string ≤ 500 ký tự, bắt buộc (nếu personal)",
+    "pa_result": "string ≤ 500 ký tự | null",
+    "pa_support": "string ≤ 500 ký tự | null",
+    "pa_lesson": "string ≤ 500 ký tự | null",
+    "pa_impact": "string ≤ 500 ký tự | null",
+    "pa_evidence": "string ≤ 500 ký tự | null",
+    "pa_quote": "string ≤ 500 ký tự | null"
   },
   "languages": ["vi", "ja", "en"],
+  "consent": {
+    "consent_media_public": true,
+    "consent_truthful": true
+  },
   "options": {
     "use_sample": "sample_1 | sample_2 | null"
   }
 }
 ```
 
+> Khi `achievement_type = team`, `answers` chứa các khóa `team_*` tương ứng
+> (`team_context`, `team_project`, `team_challenge`, `team_solution`, `team_result`,
+> `team_members`, `team_collab`, `team_lesson`, `team_impact`, `team_quote`).
+> Bộ câu hỏi chuẩn: docs/12 §2.2–2.3.
+
 **Ràng buộc**:
+- `achievement_type` ∈ {`personal`, `team`}, bắt buộc (FR-FORM-001).
+- `answers` chỉ chứa 10 question_key của chủ đề đã chọn.
+- `consent.consent_media_public` và `consent.consent_truthful` **bắt buộc = true**; thiếu → `ERR_VALIDATION` (FR-FORM-005, ADR-006).
 - `languages` ⊆ {`vi`, `ja`, `en`}, không rỗng, mặc định `["vi"]`.
-- `answers.project_description`, `challenge`, `solution` bắt buộc (FR-FORM-001.2).
-- Tổng độ dài tất cả câu trả lời ≤ 2500 ký tự (kiểm soát token).
+- Các trường bắt buộc: A1–A4 (personal) / B1–B4 (team).
+- Tổng độ dài tất cả câu trả lời ≤ 5500 ký tự (10 trường × 500 + 500 dự phòng).
 
 ### 2.2. Response — Thành công (HTTP 200)
 
 ```json
 {
-  "contract_version": "1.0",
+  "contract_version": "2.0",
   "outputs": {
-    "newsletter_vi": "string ~300 từ",
+    "newsletter_vi": "string ~300 từ, giọng FUN",
     "teams_post": "string ≤ 280 ký tự + hashtag",
     "case_study": {
       "context": "string",
@@ -71,7 +88,7 @@
   "warnings": [
     {
       "severity": "high | medium | low | info",
-      "category": "client_name | project_name | confidential_data | missing_metric | translation_check | general",
+      "category": "client_name | project_name | confidential_data | missing_metric | translation_check | proper_name | consent_missing | general",
       "description": "string"
     }
   ],
@@ -79,8 +96,8 @@
     "session_id": "string (UUID)",
     "duration_ms": 1234,
     "masked_entities": 3,
-    "token_usage": { "input": 2100, "output": 1850 },
-    "prompt_version": "1.0"
+    "token_usage": { "input": 3800, "output": 3500 },
+    "prompt_version": "2.0"
   }
 }
 ```
@@ -89,6 +106,7 @@
 - `outputs.translations.ja/en` = `null` khi ngôn ngữ tương ứng không được chọn.
 - `warnings` luôn là mảng (có thể rỗng).
 - `meta.masked_entities` = số thực thể bị ẩn trong phiên.
+- Tên riêng nội bộ còn trong đầu ra được đánh dấu (highlight) kèm warning `proper_name`.
 
 ### 2.3. Response — Lỗi (HTTP 4xx/5xx)
 
@@ -122,9 +140,9 @@
 ```json
 {
   "model": "configured-model-id",
-  "max_tokens": 4096,
+  "max_tokens": 4600,
   "temperature": 0.3,
-  "system": "<SYSTEM_PROMPT v1.0 — xem Technical Spec §2.2>",
+  "system": "<SYSTEM_PROMPT v2.0 — xem Technical Spec §2.2>",
   "messages": [
     {
       "role": "user",
@@ -144,7 +162,7 @@
       "text": "{ \"newsletter_vi\": \"...\", \"teams_post\": \"...\", \"case_study\": {...}, \"ja_version\": \"...\", \"en_version\": \"...\", \"warnings\": [...] }"
     }
   ],
-  "usage": { "input_tokens": 2100, "output_tokens": 1850 },
+  "usage": { "input_tokens": 3900, "output_tokens": 3450 },
   "stop_reason": "end_turn"
 }
 ```
@@ -165,8 +183,11 @@
 ```mermaid
 flowchart LR
     subgraph UI["UI Layer"]
+        TS["TopicSelector"]
         F["QuestionForm"]
+        CG["ConsentGate"]
         T["ResultTabs"]
+        PH["ProperNameHighlighter"]
         C["CopyButton"]
     end
     subgraph APP["Application Layer"]
@@ -187,17 +208,20 @@ flowchart LR
         J["JsonParser"]
     end
 
-    F -->|answers + languages| G
+    TS -->|achievement_type| F
+    F -->|answers + languages| CG
+    CG -->|consent| G
     G -->|sanitizeInput| D
     D -->|entityRegister| R
     R -->|answers đã chuẩn hóa| P
-    P -->|prompt| L
+    P -->|prompt v2.0| L
     L -->|raw JSON| J
     J -->|parsed| V
     V -->|outputs| O
     O -->|clean outputs + risks| W
     W -->|outputs + warnings| G
-    G -->|render| T
+    G -->|render + highlight| T
+    T -->|proper names| PH
     T -->|copy| C
     E -->|error| G
 ```
@@ -228,12 +252,13 @@ flowchart TD
 
 | Field | Kiểu | Ví dụ |
 |---|---|---|
-| `event` | string | `story_generated`, `story_error`, `story_copied` |
+| `event` | string | `story_generated`, `story_error`, `story_copied`, `consent_declined` |
 | `session_id` | UUID | `ses_8f3a...` |
+| `achievement_type` | string | `personal` |
 | `duration_ms` | int | `12340` |
 | `masked_entities` | int | `3` |
 | `warning_counts` | object | `{"high": 1, "medium": 1}` |
-| `token_usage` | object | `{"input": 2100, "output": 850}` |
+| `token_usage` | object | `{"input": 3850, "output": 950}` |
 | `error_code` | string \| null | `ERR_TIMEOUT` |
 
 **Ràng buộc**: Không bao giờ ghi `answers` hoặc nội dung đầu ra vào log (ADR-004, NFR-SEC-001).

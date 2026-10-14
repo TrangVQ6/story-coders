@@ -2,30 +2,50 @@
 
 | Thuộc tính | Giá trị |
 |---|---|
-| **Phiên bản** | 1.0 |
+| **Phiên bản** | 2.0 |
 | **Trạng thái** | Draft |
-| **Liên kết** | BRD v1.0, SRS v1.0 |
+| **Liên kết** | BRD v2.0, SRS v2.0 |
 | **Quy ước** | US-[module]-[số]; mỗi story liên kết với FR tương ứng |
 
 ---
 
-## US-FORM-001: Nhập câu chuyện dự án qua 6 câu hỏi
+## US-FORM-001: Chọn chủ đề và trả lời câu hỏi theo chủ đề
 
 **As a** thành viên/lead dự án (PA)
-**I want** trả lời 6 câu hỏi có cấu trúc về dự án của mình
-**So that** tôi có thể chia sẻ thành tựu mà không phải tự viết bài dài.
+**I want** chọn chủ đề (thành tựu cá nhân hoặc đội nhóm) và trả lời 10 câu hỏi phân tích theo chủ đề
+**So that** tôi có thể chia sẻ thành tựu đúng trọng tâm mà không phải tự viết bài dài.
 
 ### Acceptance Criteria
-- [ ] Given form hiển thị đủ 6 trường câu hỏi, when tôi nhập dữ liệu vào các trường bắt buộc (Q1, Q2, Q3) và nhấn "Tạo câu chuyện", then hệ thống tạo đầu ra thành công.
-- [ ] Given tôi bỏ trống trường bắt buộc, when tôi nhấn "Tạo câu chuyện", then hệ thống hiển thị lỗi tại đúng trường thiếu và không tạo đầu ra.
-- [ ] Given trường Q1, when tôi bắt đầu nhập, then hệ thống hiển thị gợi ý "lĩnh vực, không ghi tên khách hàng".
+- [ ] Given form hiển thị câu hỏi đầu tiên "Bạn muốn nói về nội dung gì?", when tôi chọn "Thành tựu cá nhân", then form hiển thị đúng 10 câu hỏi `pa_*`.
+- [ ] Given tôi chọn "Thành tựu đội nhóm", then form hiển thị đúng 10 câu hỏi `team_*` (không hiển thị câu hỏi cá nhân).
+- [ ] Given tôi bỏ trống trường bắt buộc (A1–A4 / B1–B4), when tôi nhấn "Tạo câu chuyện", then hệ thống hiển thị lỗi tại đúng trường thiếu và không tạo đầu ra.
+- [ ] Given tôi đã nhập dữ liệu, when tôi đổi chủ đề, then hệ thống cảnh báo và xóa câu trả lời cũ sau khi xác nhận.
+- [ ] Given trường context, when tôi bắt đầu nhập, then hệ thống hiển thị gợi ý "không ghi tên khách hàng".
 
 ### Business Rules
-- BR-001: Q1, Q2, Q3 bắt buộc; Q4, Q5, Q6 tùy chọn.
-- FR-FORM-001, FR-FORM-004 (giới hạn 500 ký tự/trường).
+- BR-009 (câu hỏi theo chủ đề), FR-FORM-001, FR-FORM-004 (giới hạn 500 ký tự/trường).
 
 ### Dependencies
-- US-FORM-002 (chọn ngôn ngữ), US-GEN-001 (tạo đầu ra).
+- US-FORM-002 (chọn ngôn ngữ), US-FORM-005 (consent), US-GEN-001 (tạo đầu ra).
+
+---
+
+## US-FORM-005: Xác nhận bảo mật trước khi tạo
+
+**As a** thành viên/lead dự án (PA/PD)
+**I want** tick 2 checkbox xác nhận (quyền công khai hình ảnh + tính xác thực/đồng ý của người được nhắc tới) trước khi tạo
+**So that** tôi đảm bảo nội dung phát hành không vi phạm quyền riêng tư của khách hàng/người khác.
+
+### Acceptance Criteria
+- [ ] Given tôi chưa tick checkbox C1 (quyền công khai hình ảnh) hoặc C2 (tính xác thực/đồng ý), then nút "Tạo câu chuyện" bị vô hiệu hóa.
+- [ ] Given tôi tick đủ 2 checkbox, then nút được mở khóa và gửi được.
+- [ ] Given tôi nhập nội dung evidence mà chưa tick C1, then hệ thống chặn gửi và hiển thị lỗi tại C1.
+
+### Business Rules
+- BR-010, FR-FORM-005, FR-FORM-006, ADR-006.
+
+### Dependencies
+- US-FORM-001, US-GEN-001.
 
 ---
 
@@ -55,7 +75,7 @@
 **So that** tôi hiểu cách dùng sản phẩm mà không cần chuẩn bị nội dung thật.
 
 ### Acceptance Criteria
-- [ ] Given tôi chọn "Dự án mẫu 1", then cả 6 trường được điền sẵn dữ liệu mẫu.
+- [ ] Given tôi chọn "Dự án mẫu 1", then cả 10 trường được điền sẵn dữ liệu mẫu.
 - [ ] Given dữ liệu mẫu, when tôi nhấn "Tạo câu chuyện", then hệ thống tạo đầu ra bình thường.
 - [ ] Dữ liệu mẫu không chứa tên khách hàng thật.
 
@@ -71,17 +91,17 @@
 **So that** tôi có bản nháp chuẩn để biên tập mà không cần phỏng vấn lại.
 
 ### Acceptance Criteria
-- [ ] Given form hợp lệ, when tôi nhấn "Tạo câu chuyện", then hệ thống trả về đủ 5 đầu ra trong ≤ 45 giây.
-- [ ] Given kết quả trả về, then bản tin nội bộ dài ~300 từ, giọng kể chuyện.
+- [ ] Given form hợp lệ (đã tick consent), when tôi nhấn "Tạo câu chuyện", then hệ thống trả về đủ 5 đầu ra trong ≤ 45 giây.
+- [ ] Given kết quả trả về, then bản tin nội bộ dài ~300 từ, giọng kể chuyện theo phong cách FUN.
 - [ ] Given kết quả trả về, then post Teams ≤ 280 ký tự (không tính hashtag) và có ≥ 1 hashtag.
 - [ ] Given kết quả trả về, then case study có đúng 4 mục: Bối cảnh, Thách thức, Giải pháp, Kết quả.
 - [ ] Given kết quả trả về, then danh sách cảnh báo luôn tồn tại (có thể ghi "đã rà soát").
 
 ### Business Rules
-- FR-GEN-001, NFR-PERF-001.
+- FR-GEN-001, FR-GEN-006, NFR-PERF-001.
 
 ### Dependencies
-- US-FORM-001, US-FORM-002.
+- US-FORM-001, US-FORM-002, US-FORM-005.
 
 ---
 
@@ -92,8 +112,8 @@
 **So that** nội dung phát hành luôn trung thực với thực tế dự án.
 
 ### Acceptance Criteria
-- [ ] Given trường Q4 (kết quả có con số) trống, when hệ thống tạo case study, then mục Kết quả không chứa bất kỳ con số nào do hệ thống tự sinh.
-- [ ] Given trường Q4 trống, then danh sách cảnh báo chứa mục "Nên bổ sung con số cụ thể".
+- [ ] Given trường pa_result/team_result (kết quả có con số) trống, when hệ thống tạo case study, then mục Kết quả không chứa bất kỳ con số nào do hệ thống tự sinh.
+- [ ] Given trường pa_result/team_result trống, then danh sách cảnh báo chứa mục "Nên bổ sung con số cụ thể".
 - [ ] Given tôi nhập số liệu "giảm 30% thời gian xử lý", then mọi đầu ra dùng đúng con số này, không thêm con số khác.
 
 ### Business Rules
@@ -101,19 +121,40 @@
 
 ---
 
-## US-GEN-003: Ẩn thông tin nhạy cảm tự động
+## US-GEN-003: Ẩn thông tin nhạy cảm + đánh dấu tên riêng
 
 **As a** lead dự án (PD)
-**I want** hệ thống tự thay tên khách hàng, tên dự án, số liệu mật bằng mô tả chung
+**I want** hệ thống tự thay tên khách hàng, tên dự án, số liệu mật bằng mô tả chung và **đánh dấu nổi bật các tên riêng** còn lại để tôi rà soát (hoặc chuyển thành chữ cái đầu)
 **So that** tôi an tâm chia sẻ thành tựu mà không lo lộ thông tin bảo mật.
 
 ### Acceptance Criteria
 - [ ] Given đầu vào chứa tên "ABC Corp", when hệ thống tạo đầu ra, then mọi đầu ra dùng "khách hàng"/mô tả chung, không xuất hiện "ABC Corp".
+- [ ] Given đầu ra còn tên riêng (vd: "Takenaka"), then tên đó được đánh dấu nổi bật (highlight) và có gợi ý "Đổi thành chữ cái đầu: T.".
+- [ ] Given tôi nhấn gợi ý đổi chữ cái đầu, then tên được thay bằng chữ cái đầu trong đầu ra.
 - [ ] Given hệ thống phát hiện rủi ro, then cảnh báo liệt kê đúng điểm rủi ro kèm gợi ý xử lý.
 - [ ] Given không phát hiện rủi ro, then cảnh báo ghi "Đã rà soát — không phát hiện rủi ro".
 
 ### Business Rules
-- FR-GEN-003, NFR-SEC-002 (privacy-by-default).
+- FR-GEN-003, NFR-SEC-002 (privacy-by-default), BR-011.
+
+---
+
+## US-GEN-005: Đầu ra theo giọng văn bản tin FUN
+
+**As a** nhân viên truyền thông nội bộ (PB)
+**I want** các đầu ra được viết theo phong cách bản tin FUN — FPT Japan (mở bài sự kiện, con số, trích dẫn, kết ý nghĩa)
+**So that** tôi có bản nháp đúng chuẩn giọng văn của tổ chức, ít phải sửa lại.
+
+### Acceptance Criteria
+- [ ] Given tôi cung cấp quote (`pa_quote`/`team_quote`), then bản tin nội bộ trích dẫn trực tiếp câu nói đó.
+- [ ] Given tôi cung cấp số liệu kết quả, then case study mục Kết quả đưa con số nổi bật.
+- [ ] Given kết quả trả về, then bản tin mở bài theo sự kiện (thời gian + sự kiện + đơn vị) và kết bài nêu ý nghĩa lan tỏa.
+
+### Business Rules
+- FR-GEN-006, BR-012, docs/12 §5.
+
+### Dependencies
+- US-GEN-001.
 
 ---
 
@@ -124,7 +165,7 @@
 **So that** tôi không mất dữ liệu đã nhập khi hệ thống gặp sự cố.
 
 ### Acceptance Criteria
-- [ ] Given hệ thống gặp lỗi khi tạo, then dữ liệu 6 trường vẫn còn nguyên trên form.
+- [ ] Given hệ thống gặp lỗi khi tạo, then dữ liệu 10 trường vẫn còn nguyên trên form.
 - [ ] Given lỗi xảy ra, then hiển thị thông báo thân thiện và nút "Thử lại".
 - [ ] Given tôi nhấn "Thử lại", then hệ thống thực hiện lại quá trình tạo.
 
@@ -220,6 +261,6 @@
 
 | Sprint đề xuất | Story |
 |---|---|
-| **Sprint 1 (nền tảng)** | US-FORM-001, US-FORM-002, US-FORM-003, US-GEN-001, US-GEN-004, US-UI-001 |
-| **Sprint 2 (an toàn & chất lượng)** | US-GEN-002, US-GEN-003, US-VIEW-001, US-VIEW-002 |
+| **Sprint 1 (nền tảng)** | US-FORM-001, US-FORM-002, US-FORM-003, US-FORM-005, US-GEN-001, US-GEN-004, US-UI-001 |
+| **Sprint 2 (an toàn & chất lượng)** | US-GEN-002, US-GEN-003, US-GEN-005, US-VIEW-001, US-VIEW-002 |
 | **Sprint 3 (kiểm soát & đa ngôn ngữ)** | US-VIEW-003, US-TRANS-001 |

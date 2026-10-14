@@ -20,11 +20,18 @@ export class SanitizationService {
     return Array.from(seen.values());
   }
 
+  /**
+   * Redact cau tra loi truoc khi dua vao prompt.
+   * - client/project/person/confidential... -> mo ta chung
+   * - proper_name (ten rieng noi bo FPT) -> GIU NGUYEN de LLM viet dung, L3 se
+   *   danh dau warning proper_name de UI highlight cho nguoi chinh sua.
+   */
   redactAnswers(answers: Answers, entities: DetectedEntity[]): Answers {
     const out = { ...answers } as Answers;
+    const redactable = entities.filter((e) => e.type !== 'proper_name');
     for (const key of Object.keys(out) as (keyof Answers)[]) {
       const v = out[key];
-      if (v) out[key] = redactText(v, entities).text;
+      if (v) out[key] = redactText(v, redactable).text;
     }
     return out;
   }

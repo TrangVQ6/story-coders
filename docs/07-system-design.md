@@ -3,11 +3,12 @@
 | Thuộc tính | Giá trị |
 |---|---|
 | **Tài liệu** | System Design Document |
-| **Phiên bản** | 1.0 |
+| **Phiên bản** | 2.0 |
 | **Trạng thái** | Draft — chờ phê duyệt |
-| **Ngày** | 2026-10-13 |
-| **Liên kết** | BRD v1.0, SRS v1.0 (docs/01, docs/02) |
+| **Ngày** | 2026-10-14 |
+| **Liên kết** | BRD v2.0, SRS v2.0 (docs/01, docs/02) |
 | **Phạm vi** | MVP (Phase 1) — Web app một trang trên nền tảng VibeFlow |
+| **Thay đổi v2.0** | TopicSelector, ConsentGate, ProperNameHighlighter, FUN style trong PromptBuilder |
 
 ---
 
@@ -63,12 +64,15 @@ flowchart TB
 ### 2.1. UI Layer
 
 | Thành phần | Trách nhiệm | FR |
-|---|---|---|
-| `QuestionForm` | Render 6 trường câu hỏi, validate bắt buộc, giới hạn 500 ký tự, gợi ý Q1 | FR-FORM-001, FR-FORM-004 |
+|---|---|---|---|
+| `TopicSelector` | Câu hỏi đầu tiên: chọn chủ đề (cá nhân/đội nhóm); render bộ 10 câu tương ứng; reset khi đổi chủ đề | FR-FORM-001 |
+| `QuestionForm` | Render 10 trường câu hỏi theo chủ đề, validate bắt buộc, giới hạn 500 ký tự, gợi ý context | FR-FORM-001, FR-FORM-004 |
 | `LanguageSelector` | Checkbox VI/JA/EN, mặc định VI | FR-FORM-002 |
 | `SampleLoader` | Tải 2 dự án mẫu vào form | FR-FORM-003 |
+| `ConsentGate` | 2 checkbox bắt buộc (quyền công khai hình ảnh + tính xác thực/đồng ý); khóa nút tạo khi chưa tick | FR-FORM-005, FR-FORM-006 |
 | `ResultTabs` | Hiển thị 5 tab + badge cảnh báo | FR-VIEW-001 |
 | `EditablePane` | Vùng chỉnh sửa nội dung từng tab | FR-VIEW-002 |
+| `ProperNameHighlighter` | Bọc tên riêng bằng thẻ `mark`/class `proper-name` + gợi ý "đổi thành chữ cái đầu" | FR-GEN-003 |
 | `CopyButton` | Copy clipboard + xác nhận "Đã sao chép" | FR-VIEW-003 |
 | `WarningGate` | Khóa Copy khi có cảnh báo mức cao chưa xác nhận | FR-VIEW-004 |
 | `LoadingOverlay` | Trạng thái tải khi đang tạo | FR-UI-002 |
@@ -77,27 +81,27 @@ flowchart TB
 
 | Thành phần | Trách nhiệm |
 |---|---|
-| `SessionStore` | Quản lý state máy: `drafting → validating → generating → ready/error` (tham chiếu state diagram docs/04 §3) |
-| `GenerateController` | Điều phối luồng: collect answers → sanitize input → build prompt → call LLM → parse → validate → scan output → render |
+| `SessionStore` | Quản lý state máy: `choosing_topic → drafting → consenting → validating → generating → ready/error` (tham chiếu state diagram docs/04 §3) |
+| `GenerateController` | Điều phối luồng: collect topic+answers → validate consent → sanitize input → build prompt → call LLM → parse → validate → scan output → render |
 | `ErrorHandler` | Map lỗi → thông báo thân thiện; giữ nguyên dữ liệu form (FR-GEN-005) |
 
 ### 2.3. Security Layer (trọng tâm)
 
 | Thành phần | Trách nhiệm | Chi tiết |
 |---|---|---|
-| `EntityDetector` | Nhận diện thực thể nhạy cảm trong đầu vào | Regex + blocklist + heuristic; xem Technical Spec §3 |
+| `EntityDetector` | Nhận diện thực thể nhạy cảm trong đầu vào (gồm tên riêng → category `proper_name`) | Regex + blocklist + heuristic; xem Technical Spec §3 |
 | `EntityRegister` | Danh sách thực thể đã phát hiện của phiên | Truyền vào prompt + dùng cho quét đầu ra |
-| `Redactor` | Thay thế thực thể bằng mô tả chung | Mapping theo loại thực thể |
-| `OutputScanner` | Quét lại mọi đầu ra tìm thực thể còn sót | Phát hiện → warning `high` + tự ẩn nếu an toàn |
+| `Redactor` | Thay thế thực thể bằng mô tả chung **hoặc chữ cái đầu** | Mapping theo loại thực thể |
+| `OutputScanner` | Quét lại mọi đầu ra tìm thực thể còn sót | Phát hiện → warning `high`/`medium` + tự ẩn nếu an toàn |
 | `SchemaValidator` | Validate JSON đầu ra theo schema | Fail → retry 1 lần → lỗi (FR-GEN-005) |
-| `ContentGuard` | Kiểm tra no-hallucination: mục result không có số khi Q4 trống | FR-GEN-002 |
-| `WarningEngine` | Tổng hợp `warnings[]` từ mọi nguồn | 6 category, 4 severity (docs/05 §2.6) |
+| `ContentGuard` | Kiểm tra no-hallucination: mục result không có số khi pa_result/team_result trống | FR-GEN-002 |
+| `WarningEngine` | Tổng hợp `warnings[]` từ mọi nguồn | 8 category, 4 severity (docs/05 §2.7) |
 
 ### 2.4. Engine Layer
 
 | Thành phần | Trách nhiệm |
 |---|---|
-| `PromptBuilder` | Ghép system prompt + user prompt (dữ liệu bọc trong thẻ `<user_data>`) |
+| `PromptBuilder` | Ghép system prompt v2.0 (giọng FUN) + user prompt (achievement_type, answers, consent, entities) |
 | `LLMClient` | Gọi model API, timeout 45s, retry 1 lần, map lỗi |
 | `JsonParser` | Trích xuất JSON từ response, normalize |
 
@@ -117,21 +121,22 @@ sequenceDiagram
     participant ENG as Engine Layer
     participant GW as LLM Gateway
 
-    U->>UI: Nhập 6 câu trả lời + chọn ngôn ngữ
+    U->>UI: Chọn chủ đề + trả lời 10 câu + chọn ngôn ngữ
+    U->>UI: Tick 2 checkbox consent
     U->>UI: Nhấn "Tạo câu chuyện"
-    UI->>APP: generateStory(answers, languages)
+    UI->>APP: generateStory(topic, answers, consent, languages)
     APP->>SEC: 1. sanitizeInput(answers)
-    SEC->>SEC: normalize + detectEntities
+    SEC->>SEC: normalize + detectEntities (gồm proper_name)
     SEC-->>APP: answers đã chuẩn hóa + entityRegister
-    APP->>ENG: buildPrompt(answers, entityRegister, languages)
+    APP->>ENG: buildPrompt(topic, answers, entityRegister, languages)
     ENG->>GW: POST /v1/messages (system + user prompt)
     GW-->>ENG: JSON thô
     ENG-->>SEC: 2. parseAndValidate(raw)
     SEC->>SEC: SchemaValidator + ContentGuard
     SEC->>SEC: 3. scanOutput(outputs, entityRegister)
     SEC-->>APP: outputs + warnings
-    APP->>UI: Render 5 tab + badge cảnh báo
-    U->>UI: Chỉnh sửa / xác nhận cảnh báo / Copy
+    APP->>UI: Render 5 tab + highlight tên riêng + badge cảnh báo
+    U->>UI: Chỉnh sửa / đổi chữ cái đầu / xác nhận cảnh báo / Copy
 ```
 
 ### 3.2. Đường dữ liệu nhạy cảm (Sensitive Data Path)

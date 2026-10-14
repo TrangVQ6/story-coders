@@ -10,7 +10,30 @@ import { createDatabase } from '../src/db/database';
 
 const BLOCKLIST = [{ value: 'ABC Corporation', type: 'client_name' as const }];
 
-describe('Workflow API (end-to-end)', () => {
+const CONSENT_OK = { consent_media_public: true, consent_truthful: true };
+
+function teamReq(overrides: Record<string, unknown> = {}) {
+  return {
+    achievement_type: 'team',
+    answers: {
+      team_intro: 'Du an cho ABC Corporation tai Nhat',
+      team_achievement: 'Hoan thanh du an ABC Corporation',
+      team_challenge: 'Ap dung thiet ke moi khong giam hieu nang',
+      team_solution: 'Danh gia rui ro truoc',
+      team_tools: null,
+      team_difference: null,
+      team_metrics: null,
+      team_feedback: null,
+      team_lesson: 'Danh gia rui ro som',
+      team_advice: null,
+    },
+    languages: ['vi', 'ja', 'en'],
+    consent: CONSENT_OK,
+    ...overrides,
+  };
+}
+
+describe('Workflow API (end-to-end) — v2.0', () => {
   let app: ReturnType<typeof createApp>;
 
   beforeAll(() => {
@@ -30,17 +53,7 @@ describe('Workflow API (end-to-end)', () => {
   });
 
   it('POST /api/stories/generate -> 200 voi 5 dau ra + warnings', async () => {
-    const res = await request(app).post('/api/stories/generate').send({
-      answers: {
-        project_description: 'Du an cho ABC Corporation tai Nhat',
-        challenge: 'Ap dung thiet ke moi khong giam hieu nang',
-        solution: 'Danh gia rui ro truoc',
-        result_metrics: null,
-        lesson: 'Danh gia rui ro som',
-        unsung_hero: 'Ky su kiem thu',
-      },
-      languages: ['vi', 'ja', 'en'],
-    });
+    const res = await request(app).post('/api/stories/generate').send(teamReq());
 
     expect(res.status).toBe(200);
     expect(res.body.outputs.newsletter_vi).toBeTruthy();
@@ -51,39 +64,59 @@ describe('Workflow API (end-to-end)', () => {
     expect(JSON.stringify(res.body.outputs)).not.toContain('ABC Corporation');
     expect(res.body.warnings.length).toBeGreaterThan(0);
     expect(res.body.meta.session_id).toBeTruthy();
+    expect(res.body.meta.prompt_version).toBe('2.0');
   });
 
   it('POST /api/stories/generate -> 422 khi thieu truong bat buoc', async () => {
+    const res = await request(app)
+      .post('/api/stories/generate')
+      .send(
+        teamReq({
+          answers: {
+            team_intro: '',
+            team_achievement: '',
+            team_challenge: '',
+            team_solution: '',
+            team_tools: null,
+            team_difference: null,
+            team_metrics: null,
+            team_feedback: null,
+            team_lesson: null,
+            team_advice: null,
+          },
+        })
+      );
+    expect(res.status).toBe(422);
+  });
+
+  it('POST /api/stories/generate -> 422 khi thieu consent (ADR-006)', async () => {
+    const res = await request(app)
+      .post('/api/stories/generate')
+      .send(
+        teamReq({
+          consent: { consent_media_public: false, consent_truthful: true },
+        })
+      );
+    expect(res.status).toBe(422);
+  });
+
+  it('POST /api/stories/generate -> 422 khi thieu achievement_type (ADR-005)', async () => {
     const res = await request(app).post('/api/stories/generate').send({
-      answers: {
-        project_description: '',
-        challenge: '',
-        solution: '',
-        result_metrics: null,
-        lesson: null,
-        unsung_hero: null,
-      },
+      answers: teamReq().answers,
       languages: ['vi'],
+      consent: CONSENT_OK,
     });
     expect(res.status).toBe(422);
   });
 
-  it('GET /api/stories/:id -> tra ve phien da luu (SQLite)', async () => {
-    const gen = await request(app).post('/api/stories/generate').send({
-      answers: {
-        project_description: 'Dua AI vao quy trinh',
-        challenge: 'Lo ngai do chinh xac',
-        solution: 'Pilot 1 phong ban',
-        result_metrics: null,
-        lesson: null,
-        unsung_hero: null,
-      },
-      languages: ['vi'],
-    });
+  it('GET /api/stories/:id -> tra ve phien da luu (SQLite) + consent', async () => {
+    const gen = await request(app).post('/api/stories/generate').send(teamReq());
     const id = gen.body.meta.session_id;
     const res = await request(app).get(`/api/stories/${id}`);
     expect(res.status).toBe(200);
     expect(res.body.id).toBe(id);
+    expect(res.body.achievement_type).toBe('team');
+    expect(res.body.consent.consent_media_public).toBe(true);
     expect(res.body.outputs.newsletter_vi).toBeTruthy();
   });
 });

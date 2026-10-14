@@ -2,10 +2,10 @@
 
 | Thuộc tính | Giá trị |
 |---|---|
-| **Phiên bản** | 1.0 |
+| **Phiên bản** | 2.0 |
 | **Trạng thái** | Draft |
 | **Phạm vi** | MVP (Phase 1) |
-| **Liên kết** | BRD v1.0, SRS v1.0, User Stories v1.0 |
+| **Liên kết** | BRD v2.0, SRS v2.0, User Stories v2.0 |
 
 ---
 
@@ -21,6 +21,10 @@
 | BR-006 Kiểm soát phát hành | FR-VIEW-004 | US-VIEW-003 | NFR-SEC-002 |
 | BR-007 Tái sử dụng dữ liệu | FR-FORM-003 | US-FORM-003 | — |
 | BR-008 Đo lường hiệu quả | *(Phase 2 — log analytics)* | — | — |
+| BR-009 Câu hỏi theo chủ đề | FR-FORM-001 | US-FORM-001 | NFR-USAB-001 |
+| BR-010 Xác nhận bảo mật | FR-FORM-005 | US-FORM-005 | NFR-COMP-001 |
+| BR-011 Đánh dấu tên riêng | FR-GEN-003 | US-GEN-003 | NFR-SEC-002 |
+| BR-012 Giọng văn chuẩn | FR-GEN-006 | US-GEN-005 | NFR-QUAL-001 |
 
 ---
 
@@ -28,15 +32,18 @@
 
 | FR | Tiêu chí chấp nhận chính | Phương pháp kiểm thử |
 |---|---|---|
-| FR-FORM-001 | Chặn gửi khi thiếu Q1–Q3 | Kiểm thử thủ công / E2E |
+| FR-FORM-001 | Chọn chủ đề → hiển thị đúng 10 câu; chặn gửi khi thiếu trường bắt buộc | Kiểm thử thủ công / E2E |
 | FR-FORM-002 | Bản dịch chỉ xuất hiện khi chọn JA/EN | Kiểm thử thủ công |
 | FR-FORM-003 | 2 dự án mẫu điền sẵn form | Kiểm thử thủ công |
 | FR-FORM-004 | Chặn nhập > 500 ký tự | Kiểm thử biên |
+| FR-FORM-005 | Chặn gửi khi chưa tick consent | Kiểm thử UI |
+| FR-FORM-006 | Evidence nhập được, chặn nếu thiếu C1 | Kiểm thử UI |
 | FR-GEN-001 | 5 đầu ra ≤ 45 giây | Kiểm thử hiệu năng |
-| FR-GEN-002 | Không số liệu tự sinh khi Q4 trống | Kiểm thử nội dung (review mẫu) |
-| FR-GEN-003 | Tên riêng được thay bằng mô tả chung | Kiểm thử nội dung (review mẫu) |
+| FR-GEN-002 | Không số liệu tự sinh khi pa_result/team_result trống | Kiểm thử nội dung (review mẫu) |
+| FR-GEN-003 | Tên riêng được thay bằng mô tả chung + highlight + gợi ý chữ cái đầu | Kiểm thử nội dung (review mẫu) |
 | FR-GEN-004 | JSON parse đúng schema | Kiểm thử API/unit |
 | FR-GEN-005 | Lỗi không làm mất dữ liệu form | Kiểm thử phục hồi lỗi |
+| FR-GEN-006 | Đầu ra theo phong cách FUN (sự kiện, con số, quote, kết ý nghĩa) | Review mẫu nội dung |
 | FR-VIEW-001 | 5 tab + badge cảnh báo | Kiểm thử UI |
 | FR-VIEW-002 | Chỉnh sửa giữ nguyên khi chuyển tab | Kiểm thử UI |
 | FR-VIEW-003 | Copy đúng nội dung đã sửa | Kiểm thử clipboard |
@@ -66,12 +73,13 @@
 
 | Hạng mục | Tổng | Đã có yêu cầu | Chưa có | Ghi chú |
 |---|---|---|---|---|
-| Câu hỏi đầu vào (Q1–Q6) | 6 | 6 | 0 | — |
+| Câu hỏi đầu vào (2 chủ đề × 10) | 20 | 20 | 0 | docs/12 §2 |
 | Đầu ra (O1–O5) | 5 | 5 | 0 | — |
+| Checkbox consent | 2 | 2 | 0 | C1, C2 (FR-FORM-005) |
 | Persona (PA–PD) | 4 | 4 | 0 | PD phủ qua US-VIEW-003 |
-| Quy định tuân thủ | 3 | 3 | 0 | PDPA, APPI, WCAG |
+| Quy định tuân thủ | 4 | 4 | 0 | PDPA, APPI, WCAG, quyền hình ảnh/đồng ý |
 | Kịch bản lỗi | 2 | 2 | 0 | EX-01, EX-02 |
-| Câu hỏi mở (OQ) | 5 | — | 5 | Cần làm rõ trước Phase 2 |
+| Câu hỏi mở (OQ) | 7 | — | 7 | Cần làm rõ trước Phase 2 |
 
 ---
 
@@ -79,15 +87,18 @@
 
 | FR/US | Trạng thái | Người thực hiện | Ghi chú |
 |---|---|---|---|
-| FR-FORM-001 | ⬜ Chưa bắt đầu | — | — |
+| FR-FORM-001 (2 chủ đề × 10) | ⬜ Chưa bắt đầu | — | Thay thế form 6 câu cũ |
 | FR-FORM-002 | ⬜ Chưa bắt đầu | — | — |
 | FR-FORM-003 | ⬜ Chưa bắt đầu | — | — |
 | FR-FORM-004 | ⬜ Chưa bắt đầu | — | — |
+| FR-FORM-005 (consent) | ⬜ Chưa bắt đầu | — | Mới |
+| FR-FORM-006 (evidence) | ⬜ Chưa bắt đầu | — | Mới |
 | FR-GEN-001 | ⬜ Chưa bắt đầu | — | — |
 | FR-GEN-002 | ⬜ Chưa bắt đầu | — | — |
-| FR-GEN-003 | ⬜ Chưa bắt đầu | — | — |
+| FR-GEN-003 (masking + highlight) | ⬜ Chưa bắt đầu | — | Mở rộng |
 | FR-GEN-004 | ⬜ Chưa bắt đầu | — | — |
 | FR-GEN-005 | ⬜ Chưa bắt đầu | — | — |
+| FR-GEN-006 (giọng FUN) | ⬜ Chưa bắt đầu | — | Mới |
 | FR-VIEW-001 | ⬜ Chưa bắt đầu | — | — |
 | FR-VIEW-002 | ⬜ Chưa bắt đầu | — | — |
 | FR-VIEW-003 | ⬜ Chưa bắt đầu | — | — |

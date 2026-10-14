@@ -5,6 +5,10 @@ import {
   GeneratedOutputs,
   LangCode,
   Warning,
+  AchievementType,
+  questionKeysFor,
+  requiredKeysFor,
+  resultKeyFor,
 } from '../types';
 import { SanitizationService } from './sanitization.service';
 import { WarningService } from './warning.service';
@@ -23,15 +27,7 @@ export class ApiError extends Error {
   }
 }
 
-const REQUIRED_KEYS: (keyof Answers)[] = ['project_description', 'challenge', 'solution'];
-const ALL_KEYS: (keyof Answers)[] = [
-  'project_description',
-  'challenge',
-  'solution',
-  'result_metrics',
-  'lesson',
-  'unsung_hero',
-];
+const VALID_TYPES: AchievementType[] = ['personal', 'team'];
 
 export class StoryService {
   constructor(
@@ -45,12 +41,14 @@ export class StoryService {
     const startedAt = Date.now();
     this.validate(req);
 
+    const type = req.achievement_type;
     const answers = req.answers;
-    const rawTexts = ALL_KEYS.filter((k) => answers[k]).map((k) => String(answers[k]));
+    const keys = questionKeysFor(type);
+    const rawTexts = keys.filter((k) => answers[k]).map((k) => String(answers[k]));
     const register = this.sanitization.detect(rawTexts);
     const redacted = this.sanitization.redactAnswers(answers, register);
 
-    const prompt = buildUserPrompt(redacted, register, req.languages);
+    const prompt = buildUserPrompt(type, redacted, register, req.languages, req.consent);
 
     let outputs: GeneratedOutputs;
     let mode: 'llm' | 'demo';
@@ -58,21 +56,24 @@ export class StoryService {
       outputs = await this.llm.generate(prompt, SYSTEM_PROMPT);
       mode = 'llm';
     } else {
-      outputs = generateDemo(redacted, req.languages);
+      outputs = generateDemo(type, redacted, req.languages);
       mode = 'demo';
     }
 
     // ContentGuard: khong bia so lieu (FR-GEN-002)
-    this.assertNoHallucination(redacted, outputs);
+    this.assertNoHallucination(type, redacted, outputs);
 
+    const resultKey = resultKeyFor(type);
     const warningGroups: Warning[][] = [];
-    warningGroups.push(this.warnings.buildMissingMetric(Boolean(redacted.result_metrics)));
+    warningGroups.push(this.warnings.buildMissingMetric(Boolean(redacted[resultKey])));
     warningGroups.push(this.sanitization.scan(this.flattenOutputs(outputs), register));
 
     const warnings = this.warnings.merge(warningGroups);
     const sessionId = this.repo.create({
+      achievementType: type,
       answers: redacted,
       languages: req.languages,
+      consent: req.consent,
       maskedEntities: register.length,
       outputs,
       warnings,
@@ -97,16 +98,37 @@ export class StoryService {
 
   private validate(req: GenerateRequest): void {
     if (!req || typeof req !== 'object') throw new ApiError(422, 'Payload không hợp lệ.');
+
+    // ADR-005: achievement_type bat buoc
+    if (!VALID_TYPES.includes(req.achievement_type)) {
+      throw new ApiError(422, 'Trường achievement_type bắt buộc: personal hoặc team.');
+    }
+    const type = req.achievement_type;
+
+    // ADR-006: consent bat buoc (FR-FORM-005)
+    if (
+      !req.consent ||
+      req.consent.consent_media_public !== true ||
+      req.consent.consent_truthful !== true
+    ) {
+      throw new ApiError(
+        422,
+        'Phải xác nhận consent: quyền công khai hình ảnh và tính xác thực của thông tin (có sự đồng ý của khách hàng/người được nhắc tới).'
+      );
+    }
+
     const answers = req.answers;
     if (!answers || typeof answers !== 'object') throw new ApiError(422, 'Thiếu trường answers.');
 
-    for (const key of REQUIRED_KEYS) {
+    // Bat buoc theo chu de: A1-A4 (personal) / B1-B4 (team)
+    for (const key of requiredKeysFor(type)) {
       const v = answers[key];
       if (typeof v !== 'string' || !v.trim()) {
         throw new ApiError(422, `Trường bắt buộc "${key}" đang trống.`);
       }
     }
-    for (const key of ALL_KEYS) {
+    // Gioi han do dai tat ca truong
+    for (const key of questionKeysFor(type)) {
       const v = answers[key];
       if (v && typeof v === 'string' && v.length > config.maxAnswerLength) {
         throw new ApiError(422, `Trường "${key}" vượt quá ${config.maxAnswerLength} ký tự.`);
@@ -123,8 +145,13 @@ export class StoryService {
     }
   }
 
-  private assertNoHallucination(redacted: Answers, outputs: GeneratedOutputs): void {
-    if (!redacted.result_metrics) {
+  private assertNoHallucination(
+    type: AchievementType,
+    redacted: Answers,
+    outputs: GeneratedOutputs
+  ): void {
+    const resultKey = resultKeyFor(type);
+    if (!redacted[resultKey]) {
       const result = outputs.case_study.result;
       if (result && /\d/.test(result)) {
         throw new ApiError(502, 'Phát hiện số liệu không có trong đầu vào — vui lòng thử lại.');

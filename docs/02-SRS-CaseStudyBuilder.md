@@ -3,36 +3,42 @@
 | Thuộc tính | Giá trị |
 |---|---|
 | **Tài liệu** | Software Requirements Specification (SRS) |
-| **Phiên bản** | 1.0 |
+| **Phiên bản** | 2.0 |
 | **Trạng thái** | Draft — chờ phê duyệt |
-| **Ngày** | 2026-10-13 |
-| **Liên kết** | BRD v1.0 (docs/01-BRD-CaseStudyBuilder.md) |
+| **Ngày** | 2026-10-14 |
+| **Liên kết** | BRD v2.0 (docs/01-BRD-CaseStudyBuilder.md), Content Standard docs/12 |
 | **Phạm vi** | MVP (Phase 1) — Web app một trang trên nền tảng VibeFlow |
+| **Thay đổi v2.0** | FR-FORM-001 (2 chủ đề × 10 câu), FR-FORM-005 (consent), FR-GEN-003 (đánh dấu tên riêng), FR-GEN-006 (giọng văn FUN) |
 
 ---
 
 ## 1. Tổng quan hệ thống
 
-**Case Study Builder** là web app một trang cho phép người dùng nhập 6 câu trả lời có cấu trúc về một dự án, chọn ngôn ngữ đầu ra, và nhận về 5 đầu ra: bản tin nội bộ, post Teams, case study chuẩn khung, bản dịch JA/EN, và danh sách cảnh báo rủi ro thông tin. Hệ thống áp dụng nguyên tắc **ẩn thông tin nhạy cảm mặc định** và **không bịa số liệu**.
+**Case Study Builder** là web app một trang cho phép người dùng **chọn chủ đề (thành tựu cá nhân / đội nhóm)**, trả lời **10 câu hỏi phân tích** theo chủ đề, tick **2 checkbox xác nhận bảo mật**, chọn ngôn ngữ đầu ra, và nhận về 5 đầu ra: bản tin nội bộ, post Teams, case study chuẩn khung, bản dịch JA/EN, và danh sách cảnh báo rủi ro thông tin. Hệ thống áp dụng nguyên tắc **ẩn thông tin nhạy cảm mặc định**, **đánh dấu nổi bật tên riêng**, **không bịa số liệu**, và **giọng văn theo bản tin FUN**.
 
 ### 1.1. Mô hình kiến trúc logic (WHAT, không phải HOW)
 
 ```mermaid
 flowchart LR
-    U["Người dùng<br/>(PA/PB/PC)"] --> F["Form 6 câu hỏi"]
-    F --> E["Engine sinh nội dung<br/>(LLM + prompt hệ thống)"]
-    E --> M["Tầng ẩn thông tin<br/>(masking + cảnh báo)"]
-    M --> O["5 đầu ra"]
-    O --> T["Tab hiển thị + Copy"]
-    T --> U
+    U["Người dùng<br/>(PA/PB/PC)"] --> T["Chọn chủ đề<br/>(cá nhân / đội nhóm)"]
+    T --> F["Form 10 câu hỏi theo chủ đề"]
+    F --> C["Checkbox xác nhận bảo mật<br/>(consent)"]
+    C --> E["Engine sinh nội dung<br/>(LLM + prompt hệ thống)"]
+    E --> M["Tầng ẩn thông tin<br/>(masking + đánh dấu tên riêng + cảnh báo)"]
+    M --> O["5 đầu ra (giọng FUN)"]
+    O --> T2["Tab hiển thị + Copy"]
+    T2 --> U
 ```
 
 ### 1.2. Thuật ngữ
 
 | Thuật ngữ | Định nghĩa |
 |---|---|
-| Phiên tạo (Session) | Một lần người dùng nhập 6 câu trả lời và nhận 5 đầu ra |
+| Phiên tạo (Session) | Một lần người dùng chọn chủ đề, trả lời 10 câu hỏi, tick consent và nhận 5 đầu ra |
 | Masking | Quá trình thay thế thông tin nhạy cảm bằng mô tả chung |
+| Proper-name highlight | Đánh dấu nổi bật tên riêng (dự án/khách hàng/người) trong bản nháp để người chỉnh sửa rà soát |
+| Initialization | Thay tên đầy đủ bằng chữ cái đầu (vd: Takenaka → T.) để giữ bảo mật |
+| Consent | Xác nhận bắt buộc: quyền công khai hình ảnh + tính xác thực/đồng ý của người được nhắc tới |
 | Warning | Cảnh báo về rủi ro thông tin cần lead duyệt |
 | Bản nháp (Draft) | Đầu ra chưa được phê duyệt; mặc định mọi đầu ra là bản nháp |
 
@@ -42,20 +48,54 @@ flowchart LR
 
 ### 2.1. Module FORM — Nhập liệu
 
-#### FR-FORM-001: Form 6 câu hỏi có cấu trúc
+#### FR-FORM-001: Form chọn chủ đề + 10 câu hỏi theo chủ đề
 
 **Priority**: Must Have | **Status**: Draft
 
-**Description**: Hệ thống phải hiển thị form gồm đúng 6 trường câu hỏi: (1) mô tả dự án, (2) thách thức lớn nhất, (3) cách giải quyết, (4) kết quả có con số, (5) bài học/mẹo, (6) người hùng thầm lặng.
+**Description**: Hệ thống phải hiển thị câu hỏi đầu tiên "Bạn muốn nói về nội dung gì?" với 2 lựa chọn: **Thành tựu cá nhân** hoặc **Thành tựu đội nhóm**. Sau khi chọn, form hiển thị **đúng 10 câu hỏi phân tích** của chủ đề đó (chi tiết bộ câu hỏi: docs/12 §2.2–2.3).
 
 **Functional Requirements**:
-- **FR-FORM-001.1**: Trường Q1 phải hiển thị gợi ý "lĩnh vực, không ghi tên khách hàng".
-- **FR-FORM-001.2**: Các trường Q1, Q2, Q3 là bắt buộc; Q4, Q5, Q6 là tùy chọn.
-- **FR-FORM-001.3**: Hệ thống phải chặn gửi form khi thiếu trường bắt buộc và hiển thị thông báo lỗi cụ thể.
+- **FR-FORM-001.1**: Trường `achievement_type` (enum `personal` | `team`) là trường đầu tiên, bắt buộc.
+- **FR-FORM-001.2**: Khi chọn `personal`, hiển thị 10 câu `pa_*`; khi chọn `team`, hiển thị 10 câu `team_*`. Không hiển thị câu hỏi của chủ đề kia.
+- **FR-FORM-001.3**: Các trường bắt buộc: A1–A4 (cá nhân) / B1–B4 (đội nhóm); còn lại tùy chọn.
+- **FR-FORM-001.4**: Đổi chủ đề → hiển thị cảnh báo xác nhận → xóa câu trả lời cũ.
+- **FR-FORM-001.5**: Hệ thống phải chặn gửi form khi thiếu trường bắt buộc và hiển thị thông báo lỗi cụ thể.
+- **FR-FORM-001.6**: Trường `pa_context`/`team_context` hiển thị gợi ý "không ghi tên khách hàng".
 
 **Acceptance Criteria**:
-1. Khi người dùng bỏ trống Q1/Q2/Q3 và nhấn "Tạo câu chuyện", hệ thống hiển thị lỗi tại đúng trường thiếu và không tạo đầu ra.
-2. Khi người dùng nhập đủ 6 trường, hệ thống cho phép gửi.
+1. Khi người dùng chưa chọn chủ đề, form không hiển thị câu hỏi chi tiết và không cho gửi.
+2. Khi chọn "Thành tựu cá nhân", form hiển thị đúng 10 câu `pa_*` (không có câu `team_*`).
+3. Khi bỏ trống trường bắt buộc và nhấn "Tạo câu chuyện", hệ thống hiển thị lỗi tại đúng trường thiếu và không tạo đầu ra.
+4. Khi đổi chủ đề, dữ liệu câu trả lời cũ bị xóa sau khi xác nhận.
+
+#### FR-FORM-005: Checkbox xác nhận bảo mật (Consent)
+
+**Priority**: Must Have | **Status**: Draft
+
+**Description**: Hệ thống phải hiển thị **2 checkbox bắt buộc** trước nút "Tạo câu chuyện":
+- **C1** `consent_media_public`: "Hình ảnh/tài liệu đính kèm được phép sử dụng và đăng tải công khai theo chính sách truyền thông."
+- **C2** `consent_truthful`: "Thông tin cung cấp là đúng sự thật và đã có sự đồng ý của khách hàng hoặc người được nhắc tới."
+
+**Functional Requirements**:
+- **FR-FORM-005.1**: Nút "Tạo câu chuyện" bị vô hiệu hóa khi chưa tick cả 2 checkbox.
+- **FR-FORM-005.2**: Nếu người dùng nhập nội dung `pa_evidence`/`team_evidence` mà chưa tick C1 → hiển thị lỗi tại checkbox C1.
+- **FR-FORM-005.3**: Giá trị consent được gửi kèm trong payload `generateStory` (API Contracts v2.0 §2.1).
+- **FR-FORM-005.4**: Backend validate consent bắt buộc; thiếu → `ERR_VALIDATION`.
+
+**Acceptance Criteria**:
+1. Khi chưa tick C1/C2, nút "Tạo câu chuyện" không thể nhấn.
+2. Khi tick đủ 2 checkbox, nút được mở khóa và gửi được.
+3. Khi nhập evidence mà chưa tick C1, hệ thống chặn gửi và chỉ rõ lỗi tại C1.
+
+#### FR-FORM-006: Hình ảnh đính kèm (MVP — mô tả/đường dẫn)
+
+**Priority**: Should Have | **Status**: Draft
+
+**Description**: MVP hỗ trợ người dùng nhập **mô tả hoặc đường dẫn hình ảnh** trong trường `pa_evidence`/`team_evidence`; không upload file nhị phân (Phase 2).
+
+**Acceptance Criteria**:
+1. Trường evidence giới hạn 500 ký tự, có nhãn "hình ảnh/minh chứng (mô tả hoặc đường dẫn)".
+2. Nếu có nội dung evidence, checkbox C1 bắt buộc phải tick. (Phase 2: upload + watermark.)
 
 #### FR-FORM-002: Chọn ngôn ngữ đầu ra
 
@@ -79,7 +119,7 @@ flowchart LR
 **Description**: Hệ thống phải cung cấp sẵn ít nhất 2 dự án mẫu để người dùng tải vào form bằng một thao tác.
 
 **Acceptance Criteria**:
-1. Khi người dùng chọn "Dự án mẫu 1", cả 6 trường được điền sẵn dữ liệu mẫu.
+1. Khi người dùng chọn "Dự án mẫu 1", cả 10 trường được điền sẵn dữ liệu mẫu.
 2. Dữ liệu mẫu không chứa tên khách hàng thật.
 
 #### FR-FORM-004: Giới hạn độ dài đầu vào
@@ -100,7 +140,7 @@ flowchart LR
 **Description**: Hệ thống phải tạo đồng thời 5 đầu ra: bản tin nội bộ (~300 từ), post Teams (≤ 280 ký tự + hashtag), case study khung Bối cảnh→Thách thức→Giải pháp→Kết quả, bản dịch JA/EN (nếu chọn), danh sách cảnh báo.
 
 **Functional Requirements**:
-- **FR-GEN-001.1**: Bản tin nội bộ phải có giọng kể chuyện, dùng thông tin từ 6 câu trả lời.
+- **FR-GEN-001.1**: Bản tin nội bộ phải có giọng kể chuyện (phong cách FUN), dùng thông tin từ 10 câu trả lời.
 - **FR-GEN-001.2**: Post Teams phải ≤ 280 ký tự (không tính hashtag) và kèm ít nhất 1 hashtag (#ProjectStory, #FJP…).
 - **FR-GEN-001.3**: Case study phải có đúng 4 mục: Bối cảnh, Thách thức, Giải pháp, Kết quả.
 - **FR-GEN-001.4**: Danh sách cảnh báo phải luôn được tạo, kể cả khi không phát hiện rủi ro (ghi "Đã rà soát — không phát hiện rủi ro").
@@ -113,36 +153,41 @@ flowchart LR
 
 **Priority**: Must Have | **Status**: Draft
 
-**Description**: Hệ thống phải chỉ dùng thông tin người dùng cung cấp. Nếu trường Q4 (kết quả có con số) trống, hệ thống phải ghi cảnh báo "Nên bổ sung con số cụ thể" và KHÔNG tự tạo số liệu.
+**Description**: Hệ thống phải chỉ dùng thông tin người dùng cung cấp. Nếu trường pa_result/team_result (kết quả có con số) trống, hệ thống phải ghi cảnh báo "Nên bổ sung con số cụ thể" và KHÔNG tự tạo số liệu.
 
 **Acceptance Criteria**:
-1. Khi Q4 trống, đầu ra case study mục Kết quả không chứa bất kỳ con số nào do hệ thống tự sinh.
-2. Khi Q4 trống, danh sách cảnh báo chứa mục "Nên bổ sung con số cụ thể".
+1. Khi pa_result/team_result trống, đầu ra case study mục Kết quả không chứa bất kỳ con số nào do hệ thống tự sinh.
+2. Khi pa_result/team_result trống, danh sách cảnh báo chứa mục "Nên bổ sung con số cụ thể".
 
-#### FR-GEN-003: Ẩn thông tin nhạy cảm (Masking)
+#### FR-GEN-003: Ẩn thông tin nhạy cảm + đánh dấu tên riêng (Masking & Proper-name highlight)
 
 **Priority**: Must Have | **Status**: Draft
 
-**Description**: Hệ thống phải phát hiện và thay thế tên khách hàng, tên sản phẩm, tên dự án, số liệu mật bằng mô tả chung (ví dụ: "khách hàng Nhật Bản", "hệ thống giao diện ô tô"). Mọi phát hiện phải được liệt kê trong danh sách cảnh báo.
+**Description**: Hệ thống phải phát hiện và thay thế tên khách hàng, tên sản phẩm, tên dự án, số liệu mật bằng mô tả chung (ví dụ: "khách hàng Nhật Bản", "hệ thống giao diện ô tô"). **Tên riêng có khả năng là dự án/khách hàng/người được đánh dấu nổi bật** trong bản nháp để người chỉnh sửa rà soát, hoặc **chỉ viết chữ cái đầu** để giữ bảo mật. Mọi phát hiện phải được liệt kê trong danh sách cảnh báo.
 
 **Functional Requirements**:
-- **FR-GEN-003.1**: Tên riêng (công ty, con người) trong đầu vào phải được thay bằng mô tả vai trò/chung.
+- **FR-GEN-003.1**: Tên riêng (công ty, con người) trong đầu vào phải được thay bằng mô tả vai trò/chung **hoặc** viết chữ cái đầu (theo lựa chọn người dùng/người chỉnh sửa).
 - **FR-GEN-003.2**: Cảnh báo phải chỉ rõ vị trí rủi ro (ví dụ: "tên dự án hoặc tên khách hàng có thể bị lộ qua mô tả kỹ thuật, cần lead duyệt").
 - **FR-GEN-003.3**: Hệ thống không được sử dụng tên thật trong bất kỳ đầu ra nào.
+- **FR-GEN-003.4**: Mọi tên riêng còn lại trong đầu ra được **bọc đánh dấu nổi bật** (thẻ `mark`/class `proper-name`) để người chỉnh sửa thấy và rà soát.
+- **FR-GEN-003.5**: Cạnh mỗi tên được đánh dấu, hiển thị gợi ý "Đổi thành chữ cái đầu" (1 click áp dụng).
+- **FR-GEN-003.6**: Warning category mới `proper_name` (severity `medium`) khi phát hiện tên riêng còn sót.
 
 **Acceptance Criteria**:
 1. Khi đầu vào chứa tên công ty "ABC Corp", mọi đầu ra dùng "khách hàng" hoặc mô tả chung, không xuất hiện "ABC Corp".
-2. Cảnh báo liệt kê đúng các điểm đã ẩn.
+2. Khi đầu ra còn tên riêng (vd: "Takenaka"), tên đó được đánh dấu nổi bật và có gợi ý đổi thành "T.".
+3. Cảnh báo liệt kê đúng các điểm đã ẩn và các tên riêng cần rà soát.
 
 #### FR-GEN-004: Prompt hệ thống chuẩn
 
 **Priority**: Must Have | **Status**: Draft
 
-**Description**: Hệ thống phải sử dụng prompt hệ thống đóng vai "chuyên viên truyền thông nội bộ hiểu kỹ thuật phần mềm, viết song ngữ Việt–Nhật" với các ràng buộc: chỉ dùng thông tin người dùng cung cấp, không bịa số liệu, thay mọi tên riêng bằng mô tả chung, trả về JSON có cấu trúc.
+**Description**: Hệ thống phải sử dụng prompt hệ thống đóng vai "chuyên viên truyền thông nội bộ hiểu kỹ thuật phần mềm, viết song ngữ Việt–Nhật" với các ràng buộc: chỉ dùng thông tin người dùng cung cấp, không bịa số liệu, thay mọi tên riêng bằng mô tả chung **hoặc chữ cái đầu**, **viết theo phong cách bản tin FUN**, trả về JSON có cấu trúc.
 
 **Acceptance Criteria**:
 1. Kết quả trả về phải parse được thành JSON gồm các khóa: `newsletter_vi`, `teams_post`, `case_study` (context, challenge, solution, result), `ja_version`, `en_version`, `warnings[]`.
 2. Khi thiếu số liệu, `warnings[]` chứa chuỗi "Nên bổ sung con số cụ thể".
+3. Đầu ra tuân thủ phong cách FUN (docs/12 §5): mở bài theo sự kiện, con số, trích dẫn, kết ý nghĩa.
 
 #### FR-GEN-005: Xử lý lỗi sinh nội dung
 
@@ -151,8 +196,26 @@ flowchart LR
 **Description**: Khi engine sinh nội dung thất bại (timeout, lỗi parse JSON), hệ thống phải hiển thị thông báo lỗi thân thiện và cho phép thử lại mà không mất dữ liệu form.
 
 **Acceptance Criteria**:
-1. Khi lỗi xảy ra, dữ liệu 6 trường vẫn còn nguyên trên form.
+1. Khi lỗi xảy ra, dữ liệu 10 trường vẫn còn nguyên trên form.
 2. Người dùng nhấn "Thử lại" và hệ thống thực hiện lại quá trình tạo.
+
+#### FR-GEN-006: Giọng văn theo bản tin FUN
+
+**Priority**: Must Have | **Status**: Draft
+
+**Description**: Mọi đầu ra văn bản (O1–O4) phải viết theo **phong cách bản tin FUN — FPT Japan** (docs/12 §5.2): mở bài theo sự kiện, người thật việc thật, con số cụ thể, trích dẫn trực tiếp, kể chuyện giải pháp, kết bài ý nghĩa lan tỏa, giọng trang trọng tích cực, đoạn ngắn.
+
+**Functional Requirements**:
+- **FR-GEN-006.1**: Bản tin nội bộ mở bài bằng thời gian + sự kiện + đơn vị (S1).
+- **FR-GEN-006.2**: Nếu người dùng cung cấp quote (`pa_quote`/`team_quote`), đầu ra phải trích dẫn trực tiếp (S4).
+- **FR-GEN-006.3**: Con số kết quả phải được đưa vào nổi bật nếu có (S3).
+- **FR-GEN-006.4**: Kết bài nêu ý nghĩa lan tỏa cho tổ chức (S6).
+- **FR-GEN-006.5**: Phong cách không được làm lộ thông tin nhạy cảm (masking vẫn ưu tiên).
+
+**Acceptance Criteria**:
+1. Bản tin nội bộ có cấu trúc: mở bài sự kiện → chi tiết → trích dẫn (nếu có) → kết ý nghĩa.
+2. Khi có quote trong đầu vào, quote xuất hiện trong bản tin/post Teams.
+3. Khi có số liệu kết quả, số liệu xuất hiện trong phần kết quả case study.
 
 ### 2.3. Module VIEW — Hiển thị & Tương tác
 
@@ -241,7 +304,7 @@ flowchart LR
 
 **Priority**: Must Have
 
-**Description**: Dữ liệu đầu vào (6 câu trả lời) không được lưu trữ lâu dài ngoài phiên làm việc; nếu lưu để tái sử dụng (Phase 2), phải có cơ chế xóa theo yêu cầu (quyền xóa dữ liệu theo PDPA Nghị định 13/2023/NĐ-CP).
+**Description**: Dữ liệu đầu vào (10 câu trả lời) không được lưu trữ lâu dài ngoài phiên làm việc; nếu lưu để tái sử dụng (Phase 2), phải có cơ chế xóa theo yêu cầu (quyền xóa dữ liệu theo PDPA Nghị định 13/2023/NĐ-CP).
 
 **Acceptance Criteria**:
 1. Kiểm tra: sau khi đóng phiên, không còn bản ghi đầu vào trên client storage.
@@ -295,10 +358,10 @@ flowchart LR
 
 | Mức | ID |
 |---|---|
-| **Must Have** | FR-FORM-001, FR-FORM-002, FR-FORM-003, FR-GEN-001, FR-GEN-002, FR-GEN-003, FR-GEN-004, FR-VIEW-001, FR-VIEW-002, FR-VIEW-003, FR-UI-001, NFR-PERF-001, NFR-SEC-001, NFR-SEC-002, NFR-USAB-001, NFR-QUAL-001 |
-| **Should Have** | FR-FORM-004, FR-GEN-005, FR-VIEW-004, FR-UI-002, NFR-PERF-002, NFR-COMP-001, NFR-USAB-002, NFR-COST-001 |
+| **Must Have** | FR-FORM-001, FR-FORM-002, FR-FORM-003, FR-FORM-005, FR-GEN-001, FR-GEN-002, FR-GEN-003, FR-GEN-004, FR-GEN-006, FR-VIEW-001, FR-VIEW-002, FR-VIEW-003, FR-UI-001, NFR-PERF-001, NFR-SEC-001, NFR-SEC-002, NFR-USAB-001, NFR-QUAL-001 |
+| **Should Have** | FR-FORM-004, FR-FORM-006, FR-GEN-005, FR-VIEW-004, FR-UI-002, NFR-PERF-002, NFR-COMP-001, NFR-USAB-002, NFR-COST-001 |
 | **Could Have** | BR-008 (log analytics), xuất file, kho lưu trữ |
-| **Won't Have (MVP)** | Approval workflow đa cấp, SSO, tích hợp CMS, đa ngôn ngữ CN/KR |
+| **Won't Have (MVP)** | Upload hình ảnh thật, approval workflow đa cấp, SSO, tích hợp CMS, đa ngôn ngữ CN/KR |
 
 ---
 

@@ -2,10 +2,10 @@
 
 | Thuộc tính | Giá trị |
 |---|---|
-| **Phiên bản** | 1.0 |
+| **Phiên bản** | 2.0 |
 | **Trạng thái** | Draft |
 | **Ký pháp** | BPMN mô tả dạng Mermaid (flowchart / sequenceDiagram / stateDiagram) |
-| **Liên kết** | SRS v1.0, User Stories v1.0 |
+| **Liên kết** | SRS v2.0, User Stories v2.0 |
 
 ---
 
@@ -21,30 +21,35 @@
 
 ```mermaid
 flowchart TD
-    A(["Bắt đầu"]) --> B["PA mở form 6 câu hỏi"]
-    B --> C{"Đã có dữ liệu mẫu?"}
-    C -- "Có" --> D["PA chọn dự án mẫu<br/>điền sẵn form"]
-    C -- "Không" --> E["PA nhập 6 câu trả lời"]
-    D --> F["PA chọn ngôn ngữ VI/JA/EN"]
-    E --> F
-    F --> G{"Form hợp lệ?<br/>(Q1-Q3 bắt buộc)"}
-    G -- "Không" --> H["Hiển thị lỗi tại trường thiếu"]
-    H --> E
-    G -- "Có" --> I["Hệ thống sinh 5 đầu ra<br/>(engine + masking)"]
-    I --> J["Hiển thị 5 tab kết quả"]
-    J --> K["PA/PB chỉnh sửa nội dung"]
-    K --> L{"Có cảnh báo mức cao?"}
-    L -- "Có" --> M["PB/PD tick xác nhận<br/>đã đọc cảnh báo"]
-    M --> N["Copy nội dung"]
-    L -- "Không" --> N
-    N --> O["PB/PD rà soát lần cuối<br/>(ngoài hệ thống)"]
-    O --> P(["Kết thúc — phát hành"])
+    A(["Bắt đầu"]) --> B["PA mở form"]
+    B --> C["PA chọn chủ đề<br/>(cá nhân / đội nhóm)"]
+    C --> D{"Đã có dữ liệu mẫu?"}
+    D -- "Có" --> E["PA chọn dự án mẫu<br/>điền sẵn 10 câu"]
+    D -- "Không" --> F["PA trả lời 10 câu<br/>theo chủ đề đã chọn"]
+    E --> G["PA chọn ngôn ngữ VI/JA/EN"]
+    F --> G
+    G --> H{"Tick 2 checkbox consent?"}
+    H -- "Không" --> I["Hiển thị lỗi tại checkbox<br/>chưa tick"]
+    I --> G
+    H -- "Có" --> J{"Form hợp lệ?<br/>(A1-A4 / B1-B4 bắt buộc)"}
+    J -- "Không" --> K["Hiển thị lỗi tại trường thiếu"]
+    K --> F
+    J -- "Có" --> L["Hệ thống sinh 5 đầu ra<br/>(engine + masking +<br/>đánh dấu tên riêng)"]
+    L --> M["Hiển thị 5 tab kết quả<br/>(tên riêng highlight)"]
+    M --> N["PA/PB chỉnh sửa nội dung<br/>+ đổi tên riêng thành chữ cái đầu"]
+    N --> O{"Có cảnh báo mức cao?"}
+    O -- "Có" --> P["PB/PD tick xác nhận<br/>đã đọc cảnh báo"]
+    P --> Q["Copy nội dung"]
+    O -- "Không" --> Q
+    Q --> R["PB/PD rà soát lần cuối<br/>(ngoài hệ thống)"]
+    R --> S(["Kết thúc — phát hành"])
 ```
 
 ### Business Rules
-- BR-001: Q1–Q3 bắt buộc; thiếu trường → chặn gửi.
+- BR-001: Chọn chủ đề bắt buộc; A1–A4 (cá nhân) / B1–B4 (đội nhóm) bắt buộc; thiếu trường → chặn gửi.
 - BR-002: Mọi đầu ra là bản nháp; không có bước tự động phát hành.
 - BR-003: Copy bị khóa khi có cảnh báo mức cao chưa xác nhận.
+- BR-010: Chưa tick 2 checkbox consent → không thể tạo nội dung.
 
 ### Exceptions
 - **EX-01 — Lỗi engine**: Hiển thị thông báo lỗi, giữ nguyên dữ liệu form, cho phép "Thử lại" (FR-GEN-005).
@@ -58,19 +63,21 @@ flowchart TD
 sequenceDiagram
     autonumber
     actor PA as Người dùng (PA/PB)
-    participant UI as Giao diện (5 tab)
+    participant UI as Giao diện (form + 5 tab)
     participant GEN as Engine sinh nội dung
     participant MASK as Tầng ẩn thông tin
 
-    PA->>UI: Nhập 6 câu trả lời + chọn ngôn ngữ
+    PA->>UI: Chọn chủ đề (cá nhân/đội nhóm)
+    PA->>UI: Trả lời 10 câu hỏi + chọn ngôn ngữ
+    PA->>UI: Tick 2 checkbox consent
     PA->>UI: Nhấn "Tạo câu chuyện"
-    UI->>GEN: Gửi payload (questions, languages)
-    GEN->>GEN: Chạy prompt hệ thống<br/>(ràng buộc không bịa số liệu)
+    UI->>GEN: Gửi payload (achievement_type, answers, consent, languages)
+    GEN->>GEN: Chạy prompt hệ thống<br/>(ràng buộc không bịa số liệu + giọng FUN)
     GEN-->>MASK: JSON thô (newsletter, post, case_study,<br/>ja_version, en_version, warnings[])
-    MASK->>MASK: Rà soát & thay tên riêng bằng mô tả chung
-    MASK-->>UI: 5 đầu ra đã ẩn thông tin
+    MASK->>MASK: Rà soát & thay tên riêng + đánh dấu nổi bật
+    MASK-->>UI: 5 đầu ra đã ẩn thông tin + highlight
     UI-->>PA: Hiển thị 5 tab + badge cảnh báo
-    PA->>UI: Chỉnh sửa nội dung
+    PA->>UI: Chỉnh sửa nội dung / đổi tên thành chữ cái đầu
     PA->>UI: Tick xác nhận cảnh báo (nếu có)
     PA->>UI: Nhấn Copy
     UI-->>PA: "Đã sao chép" (2 giây)
@@ -86,13 +93,16 @@ sequenceDiagram
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Drafting : Mở form
-    Drafting --> Validating : Nhấn "Tạo câu chuyện"
+    [*] --> ChoosingTopic : Mở form
+    ChoosingTopic --> Drafting : Chọn chủ đề
+    Drafting --> Consenting : Nhấn "Tạo câu chuyện"
+    Consenting --> Drafting : Chưa tick consent
+    Consenting --> Validating : Đã tick consent
     Validating --> Drafting : Lỗi form (thiếu trường bắt buộc)
     Validating --> Generating : Form hợp lệ
     Generating --> Error : Engine lỗi/timeout
     Error --> Generating : "Thử lại"
-    Generating --> Ready : 5 đầu ra đã masking
+    Generating --> Ready : 5 đầu ra đã masking + highlight
     Ready --> Editing : Người dùng chỉnh sửa
     Editing --> Editing : Sửa tiếp
     Editing --> Confirming : Có cảnh báo mức cao
@@ -103,8 +113,9 @@ stateDiagram-v2
 ```
 
 ### Business Rules
-- BR-006: Trạng thái `Ready` chỉ đạt được sau khi hoàn tất masking.
+- BR-006: Trạng thái `Ready` chỉ đạt được sau khi hoàn tất masking + đánh dấu tên riêng.
 - BR-007: Trạng thái `Copied` yêu cầu xác nhận cảnh báo nếu có rủi ro mức cao.
+- BR-010: Trạng thái `Validating` chỉ đạt được sau khi tick đủ consent.
 
 ---
 
@@ -127,12 +138,13 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A["Team làm dự án"] --> B["Trả lời 6 câu hỏi<br/>(≤ 10 phút)"]
-    B --> C["Case Study Builder<br/>sinh 5 đầu ra + masking"]
-    C --> D["Truyền thông biên tập<br/>trên bản nháp chuẩn"]
-    D --> E["Lead rà soát cảnh báo"]
-    E --> F["Copy & phát hành"]
-    F --> G["Nội dung ra kênh<br/>(VI/JA/EN)"]
+    A["Team làm dự án"] --> B["Chọn chủ đề + trả lời 10 câu<br/>(≤ 10 phút)"]
+    B --> C["Tick consent bảo mật"]
+    C --> D["Case Study Builder<br/>sinh 5 đầu ra + masking<br/>+ đánh dấu tên riêng"]
+    D --> E["Truyền thông biên tập<br/>trên bản nháp chuẩn giọng FUN"]
+    E --> F["Lead rà soát cảnh báo"]
+    F --> G["Copy & phát hành"]
+    G --> H["Nội dung ra kênh<br/>(VI/JA/EN)"]
 ```
 
 **Cải thiện**: Chu kỳ ≤ 10 phút cho bản nháp đầu, thông tin kỹ thuật chính xác, ẩn thông tin tự động, đa ngôn ngữ sẵn sàng.
@@ -146,7 +158,7 @@ flowchart LR
 ```mermaid
 flowchart TD
     subgraph Agent1["Agent 1 — Ẩn thông tin"]
-        A1["Nhận 6 câu trả lời"]
+        A1["Nhận 10 câu trả lời theo chủ đề"]
         A1 --> A2["Phát hiện tên riêng, số liệu mật"]
         A2 --> A3["Thay bằng mô tả chung"]
         A3 --> A4["Xuất dữ liệu đã ẩn + danh sách phát hiện"]
@@ -183,8 +195,8 @@ flowchart TD
 
 | Quy trình | Yêu cầu liên quan |
 |---|---|
-| Quy trình tổng thể (§1) | FR-FORM-001..004, FR-GEN-001..005, FR-VIEW-001..004 |
-| Sequence tương tác (§2) | FR-GEN-004, FR-GEN-003, FR-VIEW-003 |
-| State diagram (§3) | FR-GEN-005, FR-VIEW-004 |
-| To-Be (§4.2) | BR-001, NFR-USAB-001 |
+| Quy trình tổng thể (§1) | FR-FORM-001..006, FR-GEN-001..006, FR-VIEW-001..004 |
+| Sequence tương tác (§2) | FR-GEN-004, FR-GEN-003, FR-GEN-006, FR-VIEW-003 |
+| State diagram (§3) | FR-GEN-005, FR-FORM-005, FR-VIEW-004 |
+| To-Be (§4.2) | BR-001, BR-010, NFR-USAB-001 |
 | Workflow 3 agent (§5) | BR-007, NFR-PERF-002 |

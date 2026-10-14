@@ -59,6 +59,17 @@ const RULES: Rule[] = [
     type: 'confidential_data',
     pattern: /(?:Hợp đồng số|Contract\s+No\.?|契約番号)\s*[:#]?\s*\d+/gi,
   },
+  // R8 — Proper name noi bo FPT (ma don vi) — giu nguyen + highlight de ra soat (FR-GEN-003)
+  {
+    type: 'proper_name',
+    pattern: /\b(?:FJP|FNS|FKO|FJA|FHM|FDN|FSOFT|FPT)\.[A-Z0-9]{2,}(?:\.[A-Z0-9]{2,})?\b/gi,
+  },
+  // R8 — Ten nguoi day du (ho + ten, 2-4 tu viet hoa) kem chuc danh — proper_name
+  {
+    type: 'proper_name',
+    pattern:
+      /(?<![\p{L}\p{M}])[A-ZÀ-Ỹ][\p{L}\p{M}]{1,20}(?:\s+[A-ZÀ-Ỹ][\p{L}\p{M}]{1,20}){1,3}\s*(?:-|–|—)?\s*(?:PM|AM|DM|CEO|CDO|Lead|Manager|Sub Delivery Lead)(?![\p{L}\p{M}])/gu,
+  },
 ];
 
 function dedupe(items: DetectedEntity[]): DetectedEntity[] {

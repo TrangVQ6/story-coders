@@ -59,9 +59,19 @@ describe('EntityDetector — check ten khach hang / ten du an', () => {
     const hits = detectEntities('Giam 30% thoi gian xu ly, uptime 99.9%, tang 2x toc do');
     expect(hits.filter((h) => h.type === 'confidential_data')).toHaveLength(0);
   });
+
+  it('phat hien proper_name — ma don vi FPT noi bo', () => {
+    const hits = detectEntities('Nhan vien Nguyen Thi Thao Hien (FJP.RPP) dat giai');
+    expect(hits.some((h) => h.type === 'proper_name' && h.value.includes('FJP.RPP'))).toBe(true);
+  });
+
+  it('phat hien proper_name — ten nguoi day du kem chuc danh', () => {
+    const hits = detectEntities('Anh Nguyen Trung Thanh - PM cua du an');
+    expect(hits.some((h) => h.type === 'proper_name')).toBe(true);
+  });
 });
 
-describe('Redactor', () => {
+describe('Redactor — v2.0', () => {
   it('thay ten khach hang bang mo ta chung', async () => {
     const { redactText } = await import('../src/security/redactor');
     const entities = detectEntities('Du an cho ABC Corporation tai Nhat', [
@@ -71,5 +81,22 @@ describe('Redactor', () => {
     expect(out.text).not.toContain('ABC Corporation');
     expect(out.text).toContain('khách hàng');
     expect(out.replacedCount).toBeGreaterThan(0);
+  });
+
+  it('chuyen ten rieng thanh chu cai dau (initials)', async () => {
+    const { toInitials, redactText } = await import('../src/security/redactor');
+    expect(toInitials('Takenaka')).toBe('T.');
+    expect(toInitials('Nguyen Van An')).toBe('N.V.A.');
+    const entities = [{ value: 'Nguyen Van An', type: 'proper_name' as const }];
+    const out = redactText('Anh Nguyen Van An la PM', entities, { useInitials: true });
+    expect(out.text).toContain('N.V.A.');
+    expect(out.text).not.toContain('Nguyen Van An');
+  });
+
+  it('proper_name giu nguyen khi khong dung initials (de UI highlight)', async () => {
+    const { redactText } = await import('../src/security/redactor');
+    const entities = [{ value: 'FJP.RPP', type: 'proper_name' as const }];
+    const out = redactText('Nhan vien FJP.RPP dat giai', entities);
+    expect(out.text).toContain('FJP.RPP');
   });
 });
