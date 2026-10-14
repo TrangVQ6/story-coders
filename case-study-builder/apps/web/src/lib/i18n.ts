@@ -21,7 +21,6 @@ export interface Dict {
     chip: string;
   };
   hero: {
-    eyebrow: string;
     titleLead: string;
     titleEm: string;
     titleTail: string;
@@ -369,7 +368,6 @@ export const DICTS: Record<UiLang, Dict> = {
       chip: 'privacy-first',
     },
     hero: {
-      eyebrow: '2 chủ đề · 10 câu hỏi · 5 đầu ra · dưới 10 phút',
       titleLead: 'Thành tựu của team,',
       titleEm: 'kể lại',
       titleTail: 'đúng cách.',
@@ -451,7 +449,6 @@ Câu chuyện của bạn có thể là cảm hứng cho cả công ty. Bắt đ
       chip: 'privacy-first',
     },
     hero: {
-      eyebrow: '2 topics · 10 questions · 5 outputs · under 10 minutes',
       titleLead: 'Your team\'s achievements,',
       titleEm: 'told',
       titleTail: 'the right way.',
@@ -533,7 +530,6 @@ Your story could inspire the whole company. Let's get started! 🚀`,
       chip: 'privacy-first',
     },
     hero: {
-      eyebrow: '2テーマ · 10質問 · 5出力 · 10分以内',
       titleLead: 'チームの成果を、',
       titleEm: '正しく',
       titleTail: '伝える。',

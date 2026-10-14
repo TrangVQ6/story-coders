@@ -102,9 +102,6 @@ function HomeContent() {
       </header>
 
       <section className="hero">
-        <p className="eyebrow">
-          <IconSparkle size={13} /> {t.hero.eyebrow}
-        </p>
         <h2>
           {t.hero.titleLead} <em>{t.hero.titleEm}</em> {t.hero.titleTail}
         </h2>

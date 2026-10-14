@@ -125,17 +125,11 @@ body::after {
 }
 
 /* ---------- Hero ---------- */
-.hero { padding: 52px 0 32px; max-width: 680px; position: relative; }
-.eyebrow {
-  display: inline-flex; align-items: center; gap: 7px; margin: 0 0 14px; padding: 6px 14px;
-  font-size: 12px; font-weight: 650; letter-spacing: 0.045em; text-transform: uppercase;
-  color: var(--pink-deep); background: var(--pink-soft); border-radius: 999px;
-  border: 1px solid rgba(226, 102, 176, 0.25);
-}
+.hero { padding: 52px 0 32px; max-width: 760px; position: relative; }
 .hero h2 {
   margin: 0 0 16px; font-family: var(--font-display);
   font-size: clamp(32px, 5.4vw, 48px); font-weight: 580; line-height: 1.1;
-  letter-spacing: -0.017em;
+  letter-spacing: -0.017em; white-space: nowrap;
 }
 .hero h2 em {
   font-style: italic;
