@@ -99,8 +99,7 @@ body::after {
 }
 .lang-btn:hover { color: var(--pink); }
 .lang-btn.active { background: var(--gradient); color: #fff; box-shadow: 0 4px 10px rgba(226, 102, 176, 0.3); }
-.lang-flag { font-size: 13px; line-height: 1; }
-.lang-code { font-family: var(--font-mono); letter-spacing: 0.02em; }
+.lang-code { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; }
 .brand { display: flex; align-items: center; gap: 12px; }
 .brand-mark {
   width: 44px; height: 44px; border-radius: 14px;

@@ -3,12 +3,6 @@
 import { useI18n } from '../lib/i18n-context';
 import { UI_LANGS, UiLang } from '../lib/i18n';
 
-const FLAGS: Record<UiLang, string> = {
-  vi: '🇻🇳',
-  en: '🇬🇧',
-  ja: '🇯🇵',
-};
-
 const LABELS: Record<UiLang, string> = {
   vi: 'Tiếng Việt',
   en: 'English',
@@ -29,9 +23,6 @@ export default function LanguageSwitcher() {
           title={LABELS[code]}
           onClick={() => setLang(code)}
         >
-          <span className="lang-flag" aria-hidden="true">
-            {FLAGS[code]}
-          </span>
           <span className="lang-code">{code.toUpperCase()}</span>
         </button>
       ))}

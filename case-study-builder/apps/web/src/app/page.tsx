@@ -146,10 +146,6 @@ function HomeContent() {
         />
         <ResultTabs result={result} onCopy={handleCopy} copiedKey={copiedKey} />
       </section>
-
-      <footer className="site-footer">
-        <p>{t.footer}</p>
-      </footer>
     </main>
   );
 }

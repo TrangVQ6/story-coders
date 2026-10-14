@@ -81,7 +81,6 @@ export interface Dict {
     emptyHint: string;
     caseStudyPrefix: string;
   };
-  footer: string;
   questions: Record<QuestionKey, QuestionDict>;
 }
 
@@ -442,7 +441,6 @@ Câu chuyện của bạn có thể là cảm hứng cho cả công ty. Bắt đ
       emptyHint: '5 đầu ra sẵn sàng — bản tin, post Teams, case study, bản dịch, cảnh báo.',
       caseStudyPrefix: 'Bối cảnh: ',
     },
-    footer: 'An toàn thông tin mặc định · Không bịa số liệu · Con người quyết định cuối cùng',
     questions: QUESTIONS_VI,
   },
   en: {
@@ -525,7 +523,6 @@ Your story could inspire the whole company. Let's get started! 🚀`,
       emptyHint: '5 outputs ready — newsletter, Teams post, case study, translations, warnings.',
       caseStudyPrefix: 'Context: ',
     },
-    footer: 'Privacy by default · No fabricated numbers · Humans decide in the end',
     questions: QUESTIONS_EN,
   },
   ja: {
@@ -608,7 +605,6 @@ Your story could inspire the whole company. Let's get started! 🚀`,
       emptyHint: '5つの出力 — ニュースレター、Teams投稿、ケーススタディ、翻訳、警告。',
       caseStudyPrefix: '背景: ',
     },
-    footer: 'デフォルトで安全 · 数値の捏造なし · 最終判断は人間',
     questions: QUESTIONS_JA,
   },
 };
